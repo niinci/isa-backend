@@ -2,10 +2,19 @@ package rs.ac.uns.ftn.informatika.rest.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+
+import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
 
 @Service
 
@@ -18,4 +27,33 @@ public class PostService {
         return postRepository.findAllByDeletedFalse();
     }
 
+    public Post createPost(PostDTO postDTO, MultipartFile imageFile) throws IOException {
+        String imageUrl = saveImage(imageFile);
+
+        Post post = new Post(
+                postDTO.getDescription(),
+                imageUrl,
+                0,
+                false,
+                postDTO.getLatitude(),
+                postDTO.getLongitude(),
+                LocalDateTime.now()
+        );
+
+        return postRepository.save(post);
+    }
+
+    private String saveImage(MultipartFile image) throws IOException {
+        String fileName = UUID.randomUUID().toString() + "." + getExtension(image.getOriginalFilename());
+        Path path = Paths.get("uploads/images/" + fileName);
+        Files.createDirectories(path.getParent());
+        Files.copy(image.getInputStream(), path);
+
+        return "/uploads/images/" + fileName;
+    }
+
+    private String getExtension(String filename) {
+        int dotIndex = filename.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : filename.substring(dotIndex + 1);
+    }
 }

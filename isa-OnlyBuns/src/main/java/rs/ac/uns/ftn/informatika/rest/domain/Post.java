@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "posts")
@@ -23,6 +26,16 @@ public class Post {
     @Column(nullable = false)
     private boolean deleted;
 
+    @Column(nullable = false)
+    private double latitude;
+
+    @Column(nullable = false)
+    private double longitude;
+
+    @Column(nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime creationTime;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "post_id")
     @JsonManagedReference
@@ -36,6 +49,16 @@ public class Post {
         this.imageUrl = imageUrl;
         this.likes = likes;
         this.deleted = deleted;
+    }
+
+    public Post(String description, String imageUrl, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.likes = likes;
+        this.deleted = deleted;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.creationTime = creationTime;
     }
 
     public Long getId() {
@@ -85,4 +108,16 @@ public class Post {
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
+
+    public double getLatitude() { return latitude;}
+
+    public void setLatitude(double latitude) { this.latitude = latitude;}
+
+    public double getLongitude() { return longitude;}
+
+    public void setLongitude(double longitude) { this.longitude = longitude;}
+
+    public LocalDateTime getCreationTime() { return creationTime;}
+
+    public void setCreationTime(LocalDateTime creationTime) { this.creationTime = creationTime;}
 }
