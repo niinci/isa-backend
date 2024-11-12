@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 
 @Entity
@@ -22,6 +24,9 @@ public class Post {
     private String imageUrl;
 
     private int likes;
+
+    @ElementCollection
+    private Set<Long> likedUserIds = new HashSet<>();
 
     @Column(nullable = false)
     private boolean deleted;
@@ -51,15 +56,18 @@ public class Post {
         this.deleted = deleted;
     }
 
-    public Post(String description, String imageUrl, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
+    public Post(String description, String imageUrl, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime, List<Comment> comments, Set<Long> likedUserIds) {
         this.description = description;
         this.imageUrl = imageUrl;
         this.likes = likes;
+        this.likedUserIds = likedUserIds;
         this.deleted = deleted;
         this.latitude = latitude;
         this.longitude = longitude;
         this.creationTime = creationTime;
+        this.comments = comments;
     }
+
 
     public Long getId() {
         return id;
@@ -120,4 +128,12 @@ public class Post {
     public LocalDateTime getCreationTime() { return creationTime;}
 
     public void setCreationTime(LocalDateTime creationTime) { this.creationTime = creationTime;}
+
+    public Set<Long> getLikedUserIds() {
+        return likedUserIds;
+    }
+
+    public void setLikedUserIds(Set<Long> likedUserIds) {
+        this.likedUserIds = likedUserIds;
+    }
 }

@@ -31,6 +31,12 @@ public class Comment {
         this.post = post;
     }
 
+    public Comment(String content, Long userId) {
+        this.content = content;
+        this.userId = userId;
+
+    }
+
     public String getContent() {
         return content;
     }
