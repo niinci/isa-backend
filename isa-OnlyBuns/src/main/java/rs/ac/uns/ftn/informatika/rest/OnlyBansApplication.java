@@ -7,8 +7,10 @@ import org.springframework.context.annotation.Bean;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 public class OnlyBansApplication {
 	@Bean
 	public Validator validator() {

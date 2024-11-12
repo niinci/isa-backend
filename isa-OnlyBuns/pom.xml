@@ -122,6 +122,11 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>6.5.2.Final</version>   
 		</dependency>
+		<dependency>
+			<groupId>com.twelvemonkeys</groupId>
+			<artifactId>imageio-core</artifactId>
+			<version>3.6.0</version>
+		</dependency>
 
 
 	</dependencies>
