@@ -68,4 +68,11 @@ public class PostService {
         post.setDeleted(true);
         postRepository.save(post);
     }
+
+    public Post updatePost(Long postId, PostDTO postDTO) {
+        Post post = getPostById(postId);
+        post.setDescription(postDTO.getDescription());
+
+        return postRepository.save(post);
+    }
 }
