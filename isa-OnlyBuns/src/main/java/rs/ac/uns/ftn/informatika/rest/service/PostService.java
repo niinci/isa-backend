@@ -3,6 +3,7 @@ package rs.ac.uns.ftn.informatika.rest.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import rs.ac.uns.ftn.informatika.rest.exception.ResourceNotFoundException;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
 
@@ -55,5 +56,16 @@ public class PostService {
     private String getExtension(String filename) {
         int dotIndex = filename.lastIndexOf('.');
         return (dotIndex == -1) ? "" : filename.substring(dotIndex + 1);
+    }
+
+    public Post getPostById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
+    }
+
+    public void deletePost(Long postId) {
+        Post post = getPostById(postId);
+        post.setDeleted(true);
+        postRepository.save(post);
     }
 }
