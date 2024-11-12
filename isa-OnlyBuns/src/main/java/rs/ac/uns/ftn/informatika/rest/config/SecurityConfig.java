@@ -53,6 +53,7 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/api/userAccount/verify",
+                        "/api/posts/sorted",
                         "/swagger-ui.html").permitAll().anyRequest().authenticated());
         http.httpBasic(Customizer.withDefaults());
         http.sessionManagement(sess -> sess

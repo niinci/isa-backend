@@ -12,10 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
+import org.springframework.data.domain.Sort;
 
 @Service
 
@@ -75,4 +78,15 @@ public class PostService {
 
         return postRepository.save(post);
     }
+
+    public List<Post> getAllPostsSortedByDate() {
+        // Dohvati sve objave koje nisu obrisane
+        List<Post> posts = postRepository.findAllByDeletedFalse();
+
+        // Sortiraj objave po datumu kreiranja u opadajućem redosledu
+        return posts.stream()
+                .sorted(Comparator.comparing(Post::getCreationTime).reversed())
+                .collect(Collectors.toList());
+    }
+
 }

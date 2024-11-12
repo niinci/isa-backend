@@ -52,4 +52,9 @@ public class PostController {
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody PostDTO postDTO) {
         return ResponseEntity.ok(postService.updatePost(id, postDTO));
     }
+
+    @GetMapping("/sorted")
+    public List<Post> getAllPostsSortedByDate() {
+        return postService.getAllPostsSortedByDate();
+    }
 }
