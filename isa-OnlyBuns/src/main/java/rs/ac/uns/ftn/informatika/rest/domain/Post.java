@@ -2,12 +2,10 @@ package rs.ac.uns.ftn.informatika.rest.domain;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-
-import java.util.ArrayList;
-import java.util.List;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts")
@@ -41,9 +39,18 @@ public class Post {
     @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
 
-    public Post() {
+    @ManyToMany
+    @JoinTable(
+            name = "post_likes",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<UserAccount> likedByUsers = new ArrayList<>();  // Lista korisnika koji su lajkovali post
 
-    }
+    // Defaultni konstruktor
+    public Post() {}
+
+    // Konstruktor sa osnovnim parametrima
     public Post(String description, String imageUrl, int likes, boolean deleted) {
         this.description = description;
         this.imageUrl = imageUrl;
@@ -51,6 +58,7 @@ public class Post {
         this.deleted = deleted;
     }
 
+    // Konstruktor sa svim parametrima
     public Post(String description, String imageUrl, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
         this.description = description;
         this.imageUrl = imageUrl;
@@ -61,6 +69,7 @@ public class Post {
         this.creationTime = creationTime;
     }
 
+    // Getter-i i Setter-i
     public Long getId() {
         return id;
     }
@@ -109,15 +118,35 @@ public class Post {
         this.deleted = deleted;
     }
 
-    public double getLatitude() { return latitude;}
+    public double getLatitude() {
+        return latitude;
+    }
 
-    public void setLatitude(double latitude) { this.latitude = latitude;}
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
 
-    public double getLongitude() { return longitude;}
+    public double getLongitude() {
+        return longitude;
+    }
 
-    public void setLongitude(double longitude) { this.longitude = longitude;}
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
 
-    public LocalDateTime getCreationTime() { return creationTime;}
+    public LocalDateTime getCreationTime() {
+        return creationTime;
+    }
 
-    public void setCreationTime(LocalDateTime creationTime) { this.creationTime = creationTime;}
+    public void setCreationTime(LocalDateTime creationTime) {
+        this.creationTime = creationTime;
+    }
+
+    public List<UserAccount> getLikedByUsers() {
+        return likedByUsers;
+    }
+
+    public void setLikedByUsers(List<UserAccount> likedByUsers) {
+        this.likedByUsers = likedByUsers;
+    }
 }
