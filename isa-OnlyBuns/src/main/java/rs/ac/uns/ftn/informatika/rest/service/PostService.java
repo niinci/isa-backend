@@ -31,12 +31,12 @@ public class PostService {
         return postRepository.findAllByDeletedFalse();
     }
 
-    public Post createPost(PostDTO postDTO, MultipartFile imageFile) throws IOException {
-        String imageUrl = saveImage(imageFile);
+    public Post createPost(PostDTO postDTO) throws IOException {
 
         Post post = new Post(
                 postDTO.getDescription(),
-                imageUrl,
+                postDTO.getImageUrl(),
+                postDTO.getUserId(),
                 0,
                 false,
                 postDTO.getLatitude(),
