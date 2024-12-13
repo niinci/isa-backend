@@ -64,4 +64,6 @@ public class PostController {
     public List<Post> getAllPostsSortedByDate() {
         return postService.getAllPostsSortedByDate();
     }
+
+    
 }
