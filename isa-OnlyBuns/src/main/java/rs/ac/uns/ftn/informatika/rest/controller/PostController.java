@@ -9,9 +9,15 @@ import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
 import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
 import rs.ac.uns.ftn.informatika.rest.service.PostService;
+import rs.ac.uns.ftn.informatika.rest.service.ImageService;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -20,25 +26,26 @@ public class PostController {
     @Autowired
     private PostService postService;
 
+    @Autowired
+    private ImageService imageService;
+
     @GetMapping
     public List<Post> getAllPosts() {
         return postService.getAllPosts();
     }
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Post> createPost(@RequestPart("postDTO") PostDTO postDTO,
-                                           @RequestPart("imageFile") MultipartFile imageFile) {
-        // Provera da li je slika u formatu JPEG ili PNG
-        String contentType = imageFile.getContentType();
-        if (contentType == null || (!contentType.equals(MediaType.IMAGE_JPEG_VALUE) && !contentType.equals(MediaType.IMAGE_PNG_VALUE))) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-
+    @PostMapping
+    public ResponseEntity<Post> createPost(@RequestBody PostDTO postDTO) {
         try {
-            Post createdPost = postService.createPost(postDTO, imageFile);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
+            String imageUrl = imageService.saveImage(postDTO.getImageBase64());
+            if (imageUrl != null) {
+                postDTO.setImageUrl(imageUrl);
+            }
+
+            return ResponseEntity.ok(postService.createPost(postDTO));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
         }
     }
 
@@ -57,4 +64,6 @@ public class PostController {
     public List<Post> getAllPostsSortedByDate() {
         return postService.getAllPostsSortedByDate();
     }
+
+    
 }

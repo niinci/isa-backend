@@ -19,6 +19,9 @@ public class Post {
 
     private String imageUrl;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     private int likes;
 
     @Column(nullable = false)
@@ -59,9 +62,10 @@ public class Post {
     }
 
     // Konstruktor sa svim parametrima
-    public Post(String description, String imageUrl, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
+    public Post(String description, String imageUrl, Long userId, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
         this.description = description;
         this.imageUrl = imageUrl;
+        this.userId = userId;
         this.likes = likes;
         this.deleted = deleted;
         this.latitude = latitude;
@@ -93,7 +97,8 @@ public class Post {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
-
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
     public int getLikes() {
         return likes;
     }
