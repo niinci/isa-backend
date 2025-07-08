@@ -18,8 +18,20 @@ public class UserPrincipal implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("USER"));
-        authorities.add(new SimpleGrantedAuthority("ADMIN"));
+
+        switch (userAccount.getRole()) {
+            case REGISTERED_USER:
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                break;
+            case ADMIN:
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_USER")); // Admin može sve što može i user
+                break;
+            default:
+                // UNAUTHENTICATED - nema posebne uloge
+                break;
+        }
+
         return authorities;
     }
 
@@ -52,4 +64,9 @@ public class UserPrincipal implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+    public UserAccount getUserAccount() {
+        return userAccount;
+    }
 }
+

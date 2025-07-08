@@ -38,12 +38,15 @@ public class UserAccount {
     @Column(name = "post_count")
     private int postCount;
 
-
-
     @Column(name = "verification_code")
     private String verificationCode;
+
     @Column(name = "is_enabled")
     private boolean isEnabled;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role = Role.REGISTERED_USER; // Default role
 
     public String getVerificationCode() {
         return verificationCode;
@@ -61,8 +64,6 @@ public class UserAccount {
         isEnabled = enabled;
     }
 
-    private String role;
-
     public UserAccount() {
     }
 
@@ -74,6 +75,8 @@ public class UserAccount {
         this.password = userAccountDTO.getPassword();
         this.followersCount = userAccountDTO.getFollowersCount();
         this.postCount = userAccountDTO.getPostCount();
+        this.role = Role.REGISTERED_USER;
+
 
     }
 
@@ -86,8 +89,10 @@ public class UserAccount {
         this.address = address;
         this.followersCount = followersCount;
         this.postCount = postCount;
+        this.role = Role.REGISTERED_USER;
+
     }
-    private String convertAddressToJson(Address address) {
+    public String convertAddressToJson(Address address) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(address);
@@ -171,13 +176,6 @@ public class UserAccount {
         this.postCount = postCount;
     }
 
-
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 }
