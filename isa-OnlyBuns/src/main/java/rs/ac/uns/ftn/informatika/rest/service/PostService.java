@@ -1,8 +1,10 @@
 package rs.ac.uns.ftn.informatika.rest.service;
 
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.exception.ResourceNotFoundException;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
 import org.springframework.data.domain.Sort;
+import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 
 @Service
 
@@ -27,6 +30,8 @@ public class PostService {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private UserAccountRepository userRepository;
     public List<Post> getAllPosts() {
         return postRepository.findAllByDeletedFalse();
     }
@@ -88,6 +93,33 @@ public class PostService {
                 .sorted(Comparator.comparing(Post::getCreationTime).reversed())
                 .collect(Collectors.toList());
     }
+    public boolean like(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        UserAccount user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<UserAccount> likedUsers = post.getLikedByUsers();
+
+        if (likedUsers.contains(user)) {
+            likedUsers.remove(user);
+            post.setLikes(post.getLikes() - 1);
+            postRepository.save(post);
+            return false; // unlike
+        } else {
+            likedUsers.add(user);
+            post.setLikes(post.getLikes() + 1);
+            postRepository.save(post);
+            return true; // like
+        }
+    }
+
+    public List<Post> getLikedPostsByUser(Long userId) {
+        // upit u repozitorijumu
+        return postRepository.findByLikedByUsers_Id(userId);
+    }
+
 
 
 

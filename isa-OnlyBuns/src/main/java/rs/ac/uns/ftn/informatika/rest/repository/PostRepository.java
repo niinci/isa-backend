@@ -9,4 +9,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByDeletedFalse();
 
 
+    List<Post> findByLikedByUsers_Id(Long userId);
+
 }
