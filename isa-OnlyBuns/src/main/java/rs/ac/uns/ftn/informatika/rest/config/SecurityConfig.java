@@ -10,7 +10,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
@@ -31,28 +31,57 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
     @Autowired
     private JwtFilter jwtFilter;
+
+    @Autowired
+    private RateLimiterFilter rateLimiterFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(customizer -> customizer.disable());
         http.cors(Customizer.withDefaults());
         http.authorizeHttpRequests(request -> request
-                .requestMatchers("/api/userAccount/register","/api/userAccount/login","api/posts",
-                        "/api/userAccount/getUserInfo",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/api/userAccount/verify",
-                        "/api/posts/sorted",
-                        "/swagger-ui.html").permitAll().anyRequest().authenticated());
+                // Public endpoints - dostupni svima (uključujući neautentifikovane)
+                .requestMatchers("/api/posts").permitAll()
+                .requestMatchers("/api/posts/sorted").permitAll()
+                .requestMatchers("/api/userAccount/register").permitAll()
+                .requestMatchers("/api/userAccount/login").permitAll()
+                .requestMatchers("/api/userAccount/verify").permitAll()
+                .requestMatchers("/api/userAccount/getUserInfo").permitAll()
+                .requestMatchers("/api/userAccount/profile/**").permitAll()
+
+                // Swagger endpoints
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+
+                // User endpoints - potrebna USER uloga
+                .requestMatchers("/api/posts/create").hasRole("USER")
+                .requestMatchers("/api/posts/*/like").hasRole("USER")
+                .requestMatchers("/api/posts/*/comment").hasRole("USER")
+                .requestMatchers("/api/userAccount/follow/**").hasRole("USER")
+                .requestMatchers("/api/userAccount/profile/update").hasRole("USER")
+
+                // Admin endpoints - potrebna ADMIN uloga
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/posts/*/delete").hasRole("ADMIN")
+                .requestMatchers("/api/comments/*/delete").hasRole("ADMIN")
+                .requestMatchers("/api/userAccount/admin/**").hasRole("ADMIN")
+
+                // Sve ostalo zahteva autentifikaciju
+                .anyRequest().authenticated());
+
         http.httpBasic(Customizer.withDefaults());
         http.sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -60,10 +89,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:4200");  // Replace with your frontend origin
+        configuration.addAllowedOrigin("http://localhost:4200");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);  // Allows credentials like Authorization headers
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -29,6 +29,7 @@ import rs.ac.uns.ftn.informatika.rest.domain.Address;
 import rs.ac.uns.ftn.informatika.rest.domain.AuthRequest;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.domain.UserInfo;
+import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
 import rs.ac.uns.ftn.informatika.rest.service.UserAccountService;
 
@@ -173,5 +174,32 @@ public class UserAccountController {
     public ResponseEntity<List<UserAccount>> sortByEmail() {
         List<UserAccount> users = userAccountService.sortByEmail();
         return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @Operation(description = "Change user password", method = "POST")
+    @PostMapping(value = "/changePassword", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> changePassword(@RequestParam("email") String email,
+                                                 @Valid @RequestBody PasswordChangeDTO passwordChangeDTO) {
+        boolean success = userAccountService.changePassword(email, passwordChangeDTO);
+
+        if (success) {
+            return new ResponseEntity<>("Password changed successfully", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>("Failed to change password", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Operation(description = "Update user profile", method = "PUT")
+    @PutMapping(value = "/{userId}/profile", consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserAccount> updateProfile(@PathVariable("userId") Long userId,
+                                                     @Valid @RequestBody UserAccountDTO profileData) {
+        UserAccount updatedUser = userAccountService.updateProfile(userId, profileData);
+
+        if (updatedUser != null) {
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 }

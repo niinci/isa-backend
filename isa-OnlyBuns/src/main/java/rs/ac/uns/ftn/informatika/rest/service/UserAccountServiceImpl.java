@@ -19,13 +19,17 @@ import org.springframework.stereotype.Service;
 import rs.ac.uns.ftn.informatika.rest.config.Utility;
 import rs.ac.uns.ftn.informatika.rest.domain.AuthRequest;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
+import rs.ac.uns.ftn.informatika.rest.domain.Role;
+import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
+import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
@@ -58,6 +62,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     public UserAccount findById(Long id) {
         return userAccountRepository.findById(id).orElse(null);
     }
+
     @Override
     public String getUsernameById(Long userId) {
         UserAccount user = userAccountRepository.findById(userId).orElse(null);
@@ -66,6 +71,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         return null;
     }
+
     @Override
     public UserAccount create(UserAccountDTO accountDTO, HttpServletRequest request) throws Exception {
 
@@ -82,7 +88,86 @@ public class UserAccountServiceImpl implements UserAccountService {
             sendVerificationEmail(savedAcc, request);
             return savedAcc;
         }
+    }
 
+    /**
+     * Metoda za registraciju korisnika - javna za sve
+     */
+    @Override
+    public UserAccount registerUser(UserAccountDTO userAccountDTO) {
+        // Provjeri da li već postoji korisnik
+        if (userAccountRepository.findByEmail(userAccountDTO.getEmail()) != null) {
+            throw new RuntimeException("User already exists");
+        }
+
+        // Enkriptuj lozinku
+        userAccountDTO.setPassword(encoder.encode(userAccountDTO.getPassword()));
+
+        UserAccount user = new UserAccount(userAccountDTO);
+        user.setRole(Role.REGISTERED_USER); // Postavlja default ulogu
+        user.setEnabled(false); // Potrebna verifikacija
+
+        // Generiši verifikacioni kod
+        String randomCode = RandomStringUtils.randomAlphanumeric(64);
+        user.setVerificationCode(randomCode);
+
+        return userAccountRepository.save(user);
+    }
+
+    /**
+     * Dobijanje profila korisnika - javno za sve
+     */
+    @Override
+    public UserAccount getUserProfile(Long userId) {
+        return userAccountRepository.findById(userId).orElse(null);
+    }
+
+    /**
+     * Ažuriranje profila - samo vlasnik ili admin
+     */
+    @Override
+    public UserAccount updateUserProfile(Long userId, UserAccountDTO updateData) {
+        UserAccount user = userAccountRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        user.setFirstName(updateData.getFirstName());
+        user.setLastName(updateData.getLastName());
+        user.setEmail(updateData.getEmail());
+        // Konvertuj Address objekat u String ili dodijeli odgovarajuće polje
+        if (updateData.getAddress() != null) {
+            // Opcija 1: Ako Address ima toString() metodu
+            user.setAddress(updateData.getAddress().toString());
+            // Opcija 2: Ili ako Address ima određeno polje koje želite koristiti
+            // user.setAddress(updateData.getAddress().getFullAddress());
+        }
+
+        // Ako je lozinka prosledjena, enkriptuj je
+        if (updateData.getPassword() != null && !updateData.getPassword().isEmpty()) {
+            user.setPassword(encoder.encode(updateData.getPassword()));
+        }
+
+        return userAccountRepository.save(user);
+    }
+
+    /**
+     * Praćenje korisnika - samo za registrovane korisnike
+     */
+    @Override
+    public boolean followUser(Long userToFollowId) {
+        UserAccount currentUser = RoleUtils.getCurrentUser();
+        UserAccount userToFollow = userAccountRepository.findById(userToFollowId).orElse(null);
+
+        if (currentUser == null || userToFollow == null) {
+            return false;
+        }
+
+        // Logika za praćenje
+        userToFollow.setFollowersCount(userToFollow.getFollowersCount() + 1);
+        userAccountRepository.save(userToFollow);
+
+        return true;
     }
 
     @Override
@@ -90,15 +175,13 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountRepository.findAll();
     }
 
-
-
     @Override
     public void sendVerificationEmail(UserAccount savedAcc, HttpServletRequest request) throws MessagingException, UnsupportedEncodingException {
         String toAddress = savedAcc.getEmail();
         String fromAddress = "onlybunsteam@gmail.com";
         String subject = "Verification Email";
         String senderName = "OnlyBuns Team";
-        String content = "<p>Dear "+savedAcc.getFirstName() + ",<p>";
+        String content = "<p>Dear " + savedAcc.getFirstName() + ",<p>";
         content += "<p>Please click the link below to verify your account</p>";
         String siteUrl = Utility.getSiteURL(request) + "/api/userAccount/verify?code=" + savedAcc.getVerificationCode();
         content += "<h3><a href=\"" + siteUrl + "\">VERIFY</a></h3>";
@@ -112,47 +195,31 @@ public class UserAccountServiceImpl implements UserAccountService {
         helper.setText(content, true); // Setting 'true' enables HTML
 
         mailSender.send(message);
-
     }
 
+    /**
+     * Brisanje korisnika - samo admin (sa @PreAuthorize u interfejsu)
+     */
     @Override
     public UserAccount delete(Long id) {
-        UserAccount deletedAcc = userAccountRepository.findById(id).orElse(null);
-        userAccountRepository.deleteById(id);
-        return deletedAcc;
+        UserAccount user = userAccountRepository.findById(id).orElse(null);
+        if (user != null && user.getRole() != Role.ADMIN) {
+            userAccountRepository.deleteById(id);
+            return user;
+        }
+        return null;
     }
 
-    /*@Override
-    public UserAccount update(UserAccountDTO userAccountDto, Long id) throws Exception {
-        return userAccountRepository.findById(id)
-                .map(existingUserAccount -> {
-                    existingUserAccount.setFirstName(userAccountDto.getFirstName());
-                    existingUserAccount.setLastName(userAccountDto.getLastName());
-                    existingUserAccount.setEmail(userAccountDto.getEmail());
-                    existingUserAccount.setPassword(userAccountDto.getPassword());
-                    existingUserAccount.setFollowersCount(userAccountDto.getFollowersCount());
-                    existingUserAccount.setAddress(userAccountDto.getAddress());
-                    return userAccountRepository.save(existingUserAccount);
-                })
-                .orElseThrow(() -> new Exception("UserAccount not found with id: " + id));
-    }*/
-
-
-    public List<UserAccount> searchByFirstName(String firstName) {
-        return userAccountRepository.findByFirstNameContaining(firstName);
-    }
     @Override
     public String verify(AuthRequest credentials) {
         Authentication authentication = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(credentials.getUsername(), credentials.getPassword()));
 
-
         if (authentication.isAuthenticated()) {
-
             UserAccount user = userAccountRepository.findByEmail(credentials.getUsername());
 
             if (user != null && user.isEnabled()) {
-                return jwtService.generateToken(user.getEmail(), user.getId(), user.getRole());
+                return jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().toString());
             }
         }
         return "Failure";
@@ -171,28 +238,79 @@ public class UserAccountServiceImpl implements UserAccountService {
 
             return true;
         }
-
     }
 
+    @Override
+    public List<UserAccount> searchByFirstName(String firstName) {
+        return userAccountRepository.findByFirstNameContaining(firstName);
+    }
 
-
+    @Override
     public List<UserAccount> searchByLastName(String lastName) {
         return userAccountRepository.findByLastNameContaining(lastName);
     }
 
+    @Override
     public List<UserAccount> searchByEmail(String email) {
         return userAccountRepository.findByEmailContaining(email);
     }
 
+    @Override
     public List<UserAccount> searchByPostCount(int minPosts, int maxPosts) {
         return userAccountRepository.findByPostCountBetween(minPosts, maxPosts);
     }
 
+    @Override
     public List<UserAccount> sortByFollowingCount() {
         return userAccountRepository.findAllSortedByFollowingCount();
     }
 
+    @Override
     public List<UserAccount> sortByEmail() {
         return userAccountRepository.findAllSortedByEmail();
+    }
+
+    @Override
+    public boolean changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO) {
+        UserAccount user = userAccountRepository.findByEmail(userEmail);
+
+        if (user != null) {
+            // Proverava trenutni password
+            if (encoder.matches(passwordChangeDTO.getCurrentPassword(), user.getPassword())) {
+                // Proverava da li se novi password i potvrda poklapaju
+                if (passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmPassword())) {
+                    // Enkriptuje i čuva novi password
+                    user.setPassword(encoder.encode(passwordChangeDTO.getNewPassword()));
+                    userAccountRepository.save(user);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public UserAccount updateProfile(Long userId, UserAccountDTO profileData) {
+        Optional<UserAccount> userOptional = userAccountRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            UserAccount user = userOptional.get();
+
+            // Ažurira polja
+            if (profileData.getFirstName() != null) {
+                user.setFirstName(profileData.getFirstName());
+            }
+            if (profileData.getLastName() != null) {
+                user.setLastName(profileData.getLastName());
+            }
+            if (profileData.getAddress() != null) {
+                user.setAddress(user.convertAddressToJson(profileData.getAddress()));
+            }
+
+            return userAccountRepository.save(user);
+        }
+
+        return null;
     }
 }
