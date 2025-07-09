@@ -41,7 +41,7 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Autowired
-    private RateLimiterFilter rateLimiterFilter;
+    //private RateLimiterFilter rateLimiterFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -81,7 +81,7 @@ public class SecurityConfig {
         http.httpBasic(Customizer.withDefaults());
         http.sessionManagement(sess -> sess
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class)
+               // .addFilterBefore(rateLimiterFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

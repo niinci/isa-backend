@@ -95,7 +95,7 @@ public class PostController {
         return ResponseEntity.ok(Collections.singletonMap("liked", liked));
     }
 
-
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/liked")
     public List<Post> getLikedPosts(Authentication authentication) {
         String email = authentication.getName();
