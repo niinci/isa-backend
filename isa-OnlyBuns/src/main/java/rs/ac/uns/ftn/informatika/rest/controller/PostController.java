@@ -61,13 +61,13 @@ public class PostController {
             return ResponseEntity.status(500).build();
         }
     }
-
+    @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();
     }
-
+    @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody PostDTO postDTO) {
         return ResponseEntity.ok(postService.updatePost(id, postDTO));
