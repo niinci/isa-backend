@@ -1,4 +1,4 @@
-package rs.ac.uns.ftn.informatika.rest.config;
+/*package rs.ac.uns.ftn.informatika.rest.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -68,4 +68,4 @@ public class RateLimiterFilter extends OncePerRequestFilter {
 
         return Role.UNAUTHENTICATED;
     }
-}
+}*/
