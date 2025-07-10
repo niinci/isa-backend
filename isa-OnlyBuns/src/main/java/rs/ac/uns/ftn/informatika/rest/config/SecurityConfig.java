@@ -55,7 +55,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/userAccount/register").permitAll()
                 .requestMatchers("/api/userAccount/login").permitAll()
                 .requestMatchers("/api/userAccount/verify").permitAll()
-                .requestMatchers("/api/userAccount/getUserInfo").permitAll()
+                .requestMatchers("/api/userAccount/getUserInfo").hasRole("USER")
                 .requestMatchers("/api/userAccount/profile/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments/post/**").permitAll()
 

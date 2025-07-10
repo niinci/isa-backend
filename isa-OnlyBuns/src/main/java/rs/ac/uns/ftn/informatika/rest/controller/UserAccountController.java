@@ -15,6 +15,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rs.ac.uns.ftn.informatika.rest.config.Utility;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,9 +32,12 @@ import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.domain.UserInfo;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 import rs.ac.uns.ftn.informatika.rest.service.UserAccountService;
 
 import java.util.List;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/userAccount") // Tačna ruta
@@ -83,6 +87,7 @@ public class UserAccountController {
             return new ResponseEntity<String>(token, HttpStatus.OK);
         }
     }
+    @PreAuthorize("hasRole('USER')")
     @GetMapping(path = "/getUserInfo")
     public ResponseEntity<UserInfo> getUserInfo(@RequestParam String email) {
         List<UserAccount> acc = userAccountService.searchByEmail(email);
@@ -189,11 +194,10 @@ public class UserAccountController {
         }
     }
 
-    @Operation(description = "Update user profile", method = "PUT")
     @PutMapping(value = "/{userId}/profile", consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserAccount> updateProfile(@PathVariable("userId") Long userId,
-                                                     @Valid @RequestBody UserAccountDTO profileData) {
+                                                     @Valid @RequestBody UserProfileEditDTO profileData) {
         UserAccount updatedUser = userAccountService.updateProfile(userId, profileData);
 
         if (updatedUser != null) {
@@ -202,4 +206,5 @@ public class UserAccountController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
 }

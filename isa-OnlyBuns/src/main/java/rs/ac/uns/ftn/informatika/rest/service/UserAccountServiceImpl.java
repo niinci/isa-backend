@@ -3,12 +3,11 @@ package rs.ac.uns.ftn.informatika.rest.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Valid;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,8 +21,8 @@ import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.domain.Role;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
-import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -302,13 +301,12 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    public UserAccount updateProfile(Long userId, UserAccountDTO profileData) {
+    public UserAccount updateProfile(Long userId, UserProfileEditDTO profileData) {
         Optional<UserAccount> userOptional = userAccountRepository.findById(userId);
 
         if (userOptional.isPresent()) {
             UserAccount user = userOptional.get();
 
-            // Ažurira polja
             if (profileData.getFirstName() != null) {
                 user.setFirstName(profileData.getFirstName());
             }
@@ -319,7 +317,6 @@ public class UserAccountServiceImpl implements UserAccountService {
                 user.setAddress(user.convertAddressToJson(profileData.getAddress()));
             }
 
-            // Azuriranje lastActivityDate
             user.setLastActivityDate(LocalDateTime.now());
 
             return userAccountRepository.save(user);
@@ -327,4 +324,5 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         return null;
     }
+
 }
