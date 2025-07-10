@@ -1,6 +1,7 @@
 package rs.ac.uns.ftn.informatika.rest.service;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -8,6 +9,7 @@ import rs.ac.uns.ftn.informatika.rest.domain.AuthRequest;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 
 import java.util.Collection;
 import java.util.List;
@@ -64,5 +66,5 @@ public interface UserAccountService {
     UserAccount delete(Long id);
 
     boolean changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO);
-    UserAccount updateProfile(Long userId, UserAccountDTO profileData);
+    UserAccount updateProfile(Long userId, @Valid UserProfileEditDTO profileData);
 }
