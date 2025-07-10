@@ -17,14 +17,17 @@ public class CommentController {
     private CommentService commentService;
 
     @PostMapping("/post/{postId}")
-    public ResponseEntity<Comment> addComment(@PathVariable Long postId, @RequestBody CommentDTO dto) {
-        return ResponseEntity.ok(commentService.addComment(postId, dto));
+    public ResponseEntity<CommentDTO> addComment(@PathVariable Long postId, @RequestBody CommentDTO dto) {
+        CommentDTO createdComment = commentService.addComment(postId, dto);
+        return ResponseEntity.ok(createdComment);
     }
 
+
     @GetMapping("/post/{postId}")
-    public ResponseEntity<List<Comment>> getCommentsByPost(@PathVariable Long postId) {
+    public ResponseEntity<List<CommentDTO>> getCommentsByPost(@PathVariable Long postId) {
         return ResponseEntity.ok(commentService.getCommentsByPost(postId));
     }
+
 
   /*  @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
