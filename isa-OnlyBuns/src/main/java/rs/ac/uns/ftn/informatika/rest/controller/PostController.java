@@ -63,15 +63,23 @@ public class PostController {
     }
     @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        postService.deletePost(id);
+    public ResponseEntity<Void> deletePost(@PathVariable Long id, Authentication authentication) {
+        String email = authentication.getName();
+        UserAccount user = userAccountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        postService.deletePost(id, user.getId());
         return ResponseEntity.noContent().build();
     }
+
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody PostDTO postDTO) {
-        return ResponseEntity.ok(postService.updatePost(id, postDTO));
+    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody PostDTO postDTO, Authentication authentication) {
+        String email = authentication.getName();
+        UserAccount user = userAccountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(postService.updatePost(id, postDTO, user.getId()));
     }
+
 
     @GetMapping("/sorted")
     public List<Post> getAllPostsSortedByDate() {

@@ -74,14 +74,20 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
     }
 
-    public void deletePost(Long postId) {
+    public void deletePost(Long postId,Long userId) {
         Post post = getPostById(postId);
+        if (!post.getUserId().equals(userId)) {
+            throw new RuntimeException("Nemaš dozvolu da obrišeš ovaj post.");
+        }
         post.setDeleted(true);
         postRepository.save(post);
     }
 
-    public Post updatePost(Long postId, PostDTO postDTO) {
+    public Post updatePost(Long postId, PostDTO postDTO,Long userId) {
         Post post = getPostById(postId);
+        if (!post.getUserId().equals(userId)) {
+            throw new RuntimeException("Nemaš dozvolu da izmeniš ovaj post.");
+        }
         post.setDescription(postDTO.getDescription());
 
         return postRepository.save(post);
@@ -123,6 +129,26 @@ public class PostService {
         // upit u repozitorijumu
         return postRepository.findByLikedByUsers_Id(userId);
     }
+    private PostDTO mapToDTO(Post post) {
+        PostDTO dto = new PostDTO();
+        dto.setId(post.getId());
+        dto.setDescription(post.getDescription());
+        dto.setImageUrl(post.getImageUrl());
+        dto.setLikes(post.getLikes());
+        dto.setUserId(post.getUserId());  // ← KLJUČNO
+        dto.setLongitude(post.getLongitude());
+        dto.setLatitude(post.getLatitude());
+        dto.setCreatedAt(post.getCreationTime());
+        return dto;
+    }
+
+    public List<PostDTO> getAllPostDTOs() {
+        return postRepository.findAllByDeletedFalse()
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
 
 
 }
