@@ -5,6 +5,7 @@ import org.springframework.cglib.proxy.NoOp;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -56,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/userAccount/verify").permitAll()
                 .requestMatchers("/api/userAccount/getUserInfo").hasRole("USER")
                 .requestMatchers("/api/userAccount/profile/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/comments/post/**").permitAll()
 
                 // Swagger endpoints
                 .requestMatchers("/swagger-ui/**").permitAll()
@@ -68,6 +70,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/posts/*/comment").hasRole("USER")
                 .requestMatchers("/api/userAccount/follow/**").hasRole("USER")
                 .requestMatchers("/api/userAccount/profile/update").hasRole("USER")
+                .requestMatchers(HttpMethod.POST, "/api/comments/post/**").hasRole("USER")
 
                 // Admin endpoints - potrebna ADMIN uloga
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
