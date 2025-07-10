@@ -56,6 +56,7 @@ public class UserAccount {
     @Column(name = "role")
     private Role role = Role.REGISTERED_USER; // Default role
 
+
     public String getVerificationCode() {
         return verificationCode;
     }
@@ -84,11 +85,12 @@ public class UserAccount {
         this.followersCount = userAccountDTO.getFollowersCount();
         this.postCount = userAccountDTO.getPostCount();
         this.role = Role.REGISTERED_USER;
+        this.username = userAccountDTO.getUsername();
 
 
     }
 
-    public UserAccount(Long id, String firstName, String lastName, String email, String password, String address, int followersCount) {
+    public UserAccount(Long id, String firstName, String lastName, String email, String password, String address, int followersCount,String  username) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -98,6 +100,7 @@ public class UserAccount {
         this.followersCount = followersCount;
         this.postCount = postCount;
         this.role = Role.REGISTERED_USER;
+        this.username = username;
 
     }
     public String convertAddressToJson(Address address) {
@@ -192,4 +195,15 @@ public class UserAccount {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+
+
 }

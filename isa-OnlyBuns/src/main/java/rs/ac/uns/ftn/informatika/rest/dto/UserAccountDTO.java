@@ -26,6 +26,9 @@ public class UserAccountDTO {
         return address;
     }
 
+    @NotEmpty
+    public String username;
+
     public void setAddress( Address address) {
         this.address = address;
     }
@@ -75,8 +78,6 @@ public class UserAccountDTO {
         this.password = password;
     }
 
-
-
     public int getFollowersCount() {
         return followersCount;
     }
@@ -93,5 +94,11 @@ public class UserAccountDTO {
         this.postCount = postCount;
     }
 
+    public @NotEmpty String getUsername() {
+        return username;
+    }
 
+    public void setUsername(@NotEmpty String username) {
+        this.username = username;
+    }
 }

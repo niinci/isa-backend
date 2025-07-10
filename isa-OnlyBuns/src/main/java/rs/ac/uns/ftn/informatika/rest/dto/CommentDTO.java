@@ -4,6 +4,8 @@ public class CommentDTO {
     private Long id;
     private String content;
     private Long userId;
+    private String username; // DODATO
+
 
     public Long getId() {
         return id;
@@ -27,5 +29,12 @@ public class CommentDTO {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }
