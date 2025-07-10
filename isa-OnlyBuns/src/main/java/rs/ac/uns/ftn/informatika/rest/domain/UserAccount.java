@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "UserAccounts")
@@ -43,6 +44,13 @@ public class UserAccount {
 
     @Column(name = "is_enabled")
     private boolean isEnabled;
+
+
+    @Column(name = "last_activity_date")
+    private LocalDateTime lastActivityDate;
+
+    @Column(name = "last_notification_sent_date")
+    private LocalDateTime lastNotificationSentDate;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
@@ -175,6 +183,12 @@ public class UserAccount {
     public void setPostCount(int postCount) {
         this.postCount = postCount;
     }
+
+    public LocalDateTime getLastActivityDate() {return lastActivityDate;}
+    public void setLastActivityDate(LocalDateTime lastActivityDate) {this.lastActivityDate = lastActivityDate;}
+
+    public LocalDateTime getLastNotificationSentDate() {return lastNotificationSentDate;}
+    public void setLastNotificationSentDate(LocalDateTime lastNotificationSentDate) {this.lastNotificationSentDate = lastNotificationSentDate;}
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }

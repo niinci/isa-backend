@@ -27,6 +27,7 @@ import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -165,6 +166,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         // Logika za praćenje
         userToFollow.setFollowersCount(userToFollow.getFollowersCount() + 1);
+
+        // Azuriranje lastActivityDate
+        userToFollow.setLastActivityDate(LocalDateTime.now());
+
         userAccountRepository.save(userToFollow);
 
         return true;
@@ -219,6 +224,10 @@ public class UserAccountServiceImpl implements UserAccountService {
             UserAccount user = userAccountRepository.findByEmail(credentials.getUsername());
 
             if (user != null && user.isEnabled()) {
+                // Azuriranje lastActivityDate
+                user.setLastActivityDate(LocalDateTime.now());
+                userAccountRepository.save(user);
+
                 return jwtService.generateToken(user.getEmail(), user.getId(), user.getRole().toString());
             }
         }
@@ -281,6 +290,8 @@ public class UserAccountServiceImpl implements UserAccountService {
                 if (passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmPassword())) {
                     // Enkriptuje i čuva novi password
                     user.setPassword(encoder.encode(passwordChangeDTO.getNewPassword()));
+                    // Azuriranje lastActivityDate
+                    user.setLastActivityDate(LocalDateTime.now());
                     userAccountRepository.save(user);
                     return true;
                 }
@@ -307,6 +318,9 @@ public class UserAccountServiceImpl implements UserAccountService {
             if (profileData.getAddress() != null) {
                 user.setAddress(user.convertAddressToJson(profileData.getAddress()));
             }
+
+            // Azuriranje lastActivityDate
+            user.setLastActivityDate(LocalDateTime.now());
 
             return userAccountRepository.save(user);
         }
