@@ -4,7 +4,9 @@ import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import rs.ac.uns.ftn.informatika.rest.domain.PostLike;
 import rs.ac.uns.ftn.informatika.rest.exception.ResourceNotFoundException;
+import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
 import org.springframework.data.domain.Sort;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 
@@ -36,6 +39,9 @@ public class PostService {
     @Autowired
     private UserAccountRepository userRepository;
 
+    @Autowired
+    private PostLikeRepository postLikeRepository;
+
     public List<Post> getAllPosts() {
         return postRepository.findAllByDeletedFalse();
     }
@@ -46,7 +52,6 @@ public class PostService {
                 postDTO.getDescription(),
                 postDTO.getImageUrl(),
                 postDTO.getUserId(),
-                0,
                 false,
                 postDTO.getLatitude(),
                 postDTO.getLongitude(),
@@ -115,38 +120,44 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public boolean like(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + postId));
 
         UserAccount user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
-        List<UserAccount> likedUsers = post.getLikedByUsers();
+        Optional<PostLike> existingLike = postLikeRepository.findByPostAndUser(post, user);
 
-        if (likedUsers.contains(user)) {
-            likedUsers.remove(user);
-            post.setLikes(post.getLikes() - 1);
+        if (existingLike.isPresent()) {
+            postLikeRepository.delete(existingLike.get());
+            post.getLikes().remove(existingLike.get());
             postRepository.save(post);
-            return false; // unlike
+            return false;
         } else {
-            likedUsers.add(user);
-            post.setLikes(post.getLikes() + 1);
+            PostLike newLike = new PostLike(post, user);
+            postLikeRepository.save(newLike);
+            post.getLikes().add(newLike);
             postRepository.save(post);
-            return true; // like
+            return true;
         }
     }
 
     public List<Post> getLikedPostsByUser(Long userId) {
-        // upit u repozitorijumu
-        return postRepository.findByLikedByUsers_Id(userId);
+        List<PostLike> userLikes = postLikeRepository.findByUser_Id(userId);
+
+        return userLikes.stream()
+                .map(PostLike::getPost)
+                .filter(post -> !post.isDeleted())
+                .collect(Collectors.toList());
     }
     private PostDTO mapToDTO(Post post) {
         PostDTO dto = new PostDTO();
         dto.setId(post.getId());
         dto.setDescription(post.getDescription());
         dto.setImageUrl(post.getImageUrl());
-        dto.setLikes(post.getLikes());
+        dto.setLikesCount(post.getLikesCount());
         dto.setUserId(post.getUserId());  // ← KLJUČNO
         dto.setLongitude(post.getLongitude());
         dto.setLatitude(post.getLatitude());

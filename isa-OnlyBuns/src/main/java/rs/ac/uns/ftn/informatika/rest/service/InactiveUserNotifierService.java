@@ -61,7 +61,10 @@ public class InactiveUserNotifierService {
         StringBuilder emailContent = new StringBuilder();
         emailContent.append("Hey ").append(user.getFirstName()).append(",\n\n");
         emailContent.append("It’s been a quiet week without you around! \uD83D\uDC40 ");
-        emailContent.append("While you were away, here’s what’s been happening:\n\n");
+        emailContent.append("Here’s what you missed over the past week while you were away:\n\n");
+        emailContent.append("   - number of new followers: ");
+        emailContent.append("   - total likes on your posts: ");
+        emailContent.append("   - total comments on your posts: ");
         // Ovdje ide sumirana statistika
         // emailContent.append("U posljednjih 7 dana, imao/la si X novih pratilaca, Y novih lajkova...\n\n");
         emailContent.append("Hope to see you soon,\n");
