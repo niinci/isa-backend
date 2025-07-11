@@ -22,8 +22,6 @@ public class Post {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    private int likes;
-
     @Column(nullable = false)
     private boolean deleted;
 
@@ -42,35 +40,33 @@ public class Post {
     @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "post_likes",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private List<UserAccount> likedByUsers = new ArrayList<>();  // Lista korisnika koji su lajkovali post
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostLike> likes = new ArrayList<>();
 
     // Defaultni konstruktor
     public Post() {}
 
     // Konstruktor sa osnovnim parametrima
-    public Post(String description, String imageUrl, int likes, boolean deleted) {
+    public Post(String description, String imageUrl, boolean deleted) {
         this.description = description;
         this.imageUrl = imageUrl;
-        this.likes = likes;
         this.deleted = deleted;
     }
 
     // Konstruktor sa svim parametrima
-    public Post(String description, String imageUrl, Long userId, int likes, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
+    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
         this.description = description;
         this.imageUrl = imageUrl;
         this.userId = userId;
-        this.likes = likes;
         this.deleted = deleted;
         this.latitude = latitude;
         this.longitude = longitude;
         this.creationTime = creationTime;
+    }
+
+    @Transient // Ovo oznacava da JPA ne treba da mapira ovo na kolonu u bazi
+    public int getLikesCount() {
+        return this.likes != null ? this.likes.size() : 0;
     }
 
     // Getter-i i Setter-i
@@ -99,13 +95,6 @@ public class Post {
     }
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
-    public int getLikes() {
-        return likes;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
 
     public List<Comment> getComments() {
         return comments;
@@ -147,11 +136,7 @@ public class Post {
         this.creationTime = creationTime;
     }
 
-    public List<UserAccount> getLikedByUsers() {
-        return likedByUsers;
-    }
+    public List<PostLike> getLikes() {return likes;}
+    public void setLikes(List<PostLike> likes) {this.likes = likes;}
 
-    public void setLikedByUsers(List<UserAccount> likedByUsers) {
-        this.likedByUsers = likedByUsers;
-    }
 }

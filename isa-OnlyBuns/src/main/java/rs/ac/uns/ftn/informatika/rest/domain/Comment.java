@@ -2,6 +2,9 @@ package rs.ac.uns.ftn.informatika.rest.domain;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comments")
@@ -16,6 +19,10 @@ public class Comment {
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
+
+    @Column(nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime commentedAt;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
@@ -62,4 +69,6 @@ public class Comment {
     public void setPost(Post post) {
         this.post = post;
     }
+    public LocalDateTime getCommentedAt() { return commentedAt; }
+    public void setCommentedAt(LocalDateTime commentedAt) { this.commentedAt = commentedAt; }
 }

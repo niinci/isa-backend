@@ -1,10 +1,14 @@
 package rs.ac.uns.ftn.informatika.rest.service;
 
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import rs.ac.uns.ftn.informatika.rest.domain.Post;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
+import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
+import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import org.springframework.mail.SimpleMailMessage;
 import java.time.LocalDateTime;
@@ -13,23 +17,28 @@ import java.util.List;
 @Service
 public class InactiveUserNotifierService {
     private final UserAccountRepository userAccountRepository;
+    private final PostRepository postRepository;
     private final JavaMailSender mailSender;
+    private final UserStatisticsService userStatisticsService;
 
     @Autowired
-    public InactiveUserNotifierService(UserAccountRepository userAccountRepository, JavaMailSender mailSender /*, PostService postService, FollowService followService, LikeService likeService */) {
+    public InactiveUserNotifierService(UserAccountRepository userAccountRepository, PostLikeRepository postLikeRepository, PostRepository postRepository, JavaMailSender mailSender, UserStatisticsService userStatisticsService /*, PostService postService, FollowService followService, LikeService likeService */) {
         this.userAccountRepository = userAccountRepository;
+        this.postRepository = postRepository;
         this.mailSender = mailSender;
         // dodati sta treba za statistiku
+        this.userStatisticsService = userStatisticsService;
     }
 
     @Scheduled(cron = "0/30 * * * * ?")
     public void notifyInactiveUsers() {
         // provjera neaktivnosti
-        //LocalDateTime activityThreshold  = LocalDateTime.now().minusMinutes(5); // za testiranje
+        // LocalDateTime activityThreshold  = LocalDateTime.now().minusMinutes(5); // za testiranje
         LocalDateTime activityThreshold  = LocalDateTime.now().minusDays(7);
 
         // period mirovanja notifikacija
         LocalDateTime notificationThreshold = LocalDateTime.now().minusDays(7);
+        //LocalDateTime notificationThreshold = LocalDateTime.now().minusMinutes(10); // za testiranje
 
         List<UserAccount> inactiveUsers = userAccountRepository.findByLastActivityDateBeforeAndIsEnabledTrueAndLastNotificationSentDateBeforeOrLastNotificationSentDateIsNull(
                 activityThreshold , notificationThreshold);
@@ -42,7 +51,7 @@ public class InactiveUserNotifierService {
             System.out.println("Inactive user: " + user.getEmail()); // Za debug
 
             String subject = "OnlyBuns: We Miss You! Here's What You’ve Missed This Week \uD83C\uDF1F";
-            String body = buildEmailBody(user);
+            String body = userStatisticsService.buildEmailBodyWithStatistics(user);
 
             try {
                 sendEmail(user.getEmail(), subject, body);
@@ -52,22 +61,6 @@ public class InactiveUserNotifierService {
                 System.err.println("Error sending email to user " + user.getEmail() + ": " + e.getMessage());
             }
         }
-    }
-
-    private String buildEmailBody(UserAccount user) {
-        // Implementacija prikupljanja i formatiranja statistike ovdje
-        // Trenutno je samo genericka poruka za testiranje
-
-        StringBuilder emailContent = new StringBuilder();
-        emailContent.append("Hey ").append(user.getFirstName()).append(",\n\n");
-        emailContent.append("It’s been a quiet week without you around! \uD83D\uDC40 ");
-        emailContent.append("While you were away, here’s what’s been happening:\n\n");
-        // Ovdje ide sumirana statistika
-        // emailContent.append("U posljednjih 7 dana, imao/la si X novih pratilaca, Y novih lajkova...\n\n");
-        emailContent.append("Hope to see you soon,\n");
-        emailContent.append("OnlyBuns Team \uD83D\uDE80");
-
-        return emailContent.toString();
     }
 
     private void sendEmail(String to, String subject, String body) {
