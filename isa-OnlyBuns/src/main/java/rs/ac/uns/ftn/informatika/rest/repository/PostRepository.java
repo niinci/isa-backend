@@ -8,4 +8,5 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findAllByDeletedFalse();
     Post findByImageUrl(String imageUrl);
+    List<Post> findByUserId(Long id);
 }
