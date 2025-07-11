@@ -44,10 +44,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class UserAccountController {
     @Autowired
     private UserAccountService userAccountService;
-
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(description = "Get all users with pagination", method = "GET")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserAccount>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
