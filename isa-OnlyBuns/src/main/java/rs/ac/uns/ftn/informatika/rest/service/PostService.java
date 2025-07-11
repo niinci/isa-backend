@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,18 @@ public class PostService {
                 LocalDateTime.now()
         );
 
-        return postRepository.save(post);
+        Post savedPost = postRepository.save(post);
+
+        Optional<UserAccount> userOpt = userRepository.findById(postDTO.getUserId());
+        if(userOpt.isPresent()) {
+            UserAccount user = userOpt.get();
+            user.setPostCount(user.getPostCount() + 1);
+            userRepository.save(user);
+        } else {
+            System.out.println("User not found with id: " + postDTO.getUserId());
+        }
+
+        return savedPost;
     }
 
     private String saveImage(MultipartFile image) throws IOException {
