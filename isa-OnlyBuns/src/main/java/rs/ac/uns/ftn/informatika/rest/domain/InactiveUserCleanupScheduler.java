@@ -14,7 +14,7 @@ public class InactiveUserCleanupScheduler {
     private UserAccountCleanupService cleanupService;
 
     // Pokrece se svakog dana u 23:59
-    @Scheduled(cron = "0 23 59 L * ?")
+    @Scheduled(cron = "0 59 23 L * ?")
     public void scheduleInactiveUserCleanup() {
             cleanupService.deleteInactiveAccountsOlderThan(1);
     }
