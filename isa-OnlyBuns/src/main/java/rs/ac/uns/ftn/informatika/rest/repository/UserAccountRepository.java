@@ -22,6 +22,9 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     List<UserAccount> findByLastActivityDateBeforeAndIsEnabledTrueAndLastNotificationSentDateBeforeOrLastNotificationSentDateIsNull(LocalDateTime activityDateTime, LocalDateTime notificationDateTime);
 
     Optional<UserAccount> findByVerificationCode(String verificationCode);
+
+    List<UserAccount> findByIsEnabledFalseAndVerificationCodeIsNotNullAndRegistrationDateBefore(LocalDateTime cutoff);
+
 }
 
 

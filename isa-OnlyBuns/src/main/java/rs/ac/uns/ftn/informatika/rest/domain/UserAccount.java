@@ -56,6 +56,13 @@ public class UserAccount {
     @Column(name = "role")
     private Role role = Role.REGISTERED_USER; // Default role
 
+    @Column(name = "registration_date", nullable = false, updatable = false)
+    private LocalDateTime registrationDate;
+
+    @PrePersist
+    protected void onCreate() {
+        this.registrationDate = LocalDateTime.now();
+    }
 
     public String getVerificationCode() {
         return verificationCode;
@@ -203,6 +210,14 @@ public class UserAccount {
     public void setUsername(String username) {
         this.username = username;
     }
+    public LocalDateTime getRegistrationDate() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(LocalDateTime registrationDate) {
+        this.registrationDate = registrationDate;
+    }
+
 
 
 
