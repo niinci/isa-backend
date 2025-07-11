@@ -1,7 +1,7 @@
 // rs.ac.uns.ftn.informatika.rest.service/UserStatisticsService.java
 package rs.ac.uns.ftn.informatika.rest.service;
 
-import jakarta.transaction.Transactional; // Bitno: Proverite ispravan import za vašu verziju Spring Boota
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
@@ -29,7 +29,7 @@ public class UserStatisticsService {
         // LAJKOVI:
         long newLikesOnUserPosts = userPosts.stream()
                 .flatMap(post -> post.getLikes().stream())
-                .filter(like -> like.getLikedAt().isAfter(sevenDaysAgo)) // Koristite getCreationTime() za PostLike
+                .filter(like -> like.getLikedAt().isAfter(sevenDaysAgo))
                 .count();
 
         // KOMENTARI:
