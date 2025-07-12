@@ -55,7 +55,7 @@ public class PostService {
                 false,
                 postDTO.getLatitude(),
                 postDTO.getLongitude(),
-                LocalDateTime.now(),
+                null,
                 0L
         );
 
