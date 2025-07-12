@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import rs.ac.uns.ftn.informatika.rest.config.Utility;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,9 +34,14 @@ import rs.ac.uns.ftn.informatika.rest.domain.UserInfo;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
+import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.service.UserAccountService;
+import rs.ac.uns.ftn.informatika.rest.service.GeocodingService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -44,6 +50,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class UserAccountController {
     @Autowired
     private UserAccountService userAccountService;
+
+    @Autowired
+    private UserAccountRepository userAccountRepository;
+
+    @Autowired GeocodingService geocodingService;
+
+
     @Operation(description = "Get all users with pagination", method = "GET")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
@@ -206,6 +219,25 @@ public class UserAccountController {
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("/location")
+    public ResponseEntity<?> getUserLocation(Authentication auth) {
+        if (auth == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        UserAccount ua = userAccountRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        Address adr = ua.convertJsonToAddress();
+        return geocodingService.geocode(adr)
+                .<ResponseEntity<?>>map(ll -> {
+                    Map<String, Double> map = new HashMap<>();
+                    map.put("latitude", ll.getLat());
+                    map.put("longitude", ll.getLon());
+                    return ResponseEntity.ok(map);
+                })
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                        .body("Geokodiranje nije uspelo"));
     }
 
 }

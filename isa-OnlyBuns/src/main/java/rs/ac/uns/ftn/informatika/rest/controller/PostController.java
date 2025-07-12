@@ -27,7 +27,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Collections;
 
-
+import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -113,4 +116,36 @@ public class PostController {
         return postService.getLikedPostsByUser(user.getId());
     }
 
+    @GetMapping("/nearby")
+    public ResponseEntity<?> getNearbyPosts(
+            Authentication authentication,
+            @RequestParam double latitude,
+            @RequestParam double longitude,
+            @RequestParam(defaultValue = "5.0") double radiusKm
+    ) {
+        String userEmail = authentication.getName();  // Email ulogovanog korisnika
+        Optional<UserAccount> optionalUser = userAccountRepository.findByEmail(userEmail);
+
+        if (!optionalUser.isPresent()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Korisnik nije pronađen.");
+        }
+
+        UserAccount currentUser = optionalUser.get();
+
+        List<Post> nearby = postService.findPostsNearby(latitude, longitude, radiusKm);
+
+        // Filtriraj da ne prikazuje objave trenutnog korisnika
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (Post post : nearby) {
+            if (!post.getUserId().equals(currentUser.getId())) {
+                Map<String, Object> p = new HashMap<>();
+                p.put("title", post.getDescription());
+                p.put("latitude", post.getLatitude());
+                p.put("longitude", post.getLongitude());
+                response.add(p);
+            }
+        }
+
+        return ResponseEntity.ok(response);
+    }
 }
