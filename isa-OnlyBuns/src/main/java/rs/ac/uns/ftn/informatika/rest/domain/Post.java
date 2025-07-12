@@ -5,7 +5,9 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "posts")
@@ -40,8 +42,11 @@ public class Post {
     @JsonManagedReference
     private List<Comment> comments = new ArrayList<>();
 
+    @Column(name = "likes_count", nullable = false)
+    private Long likesCount = 0L;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PostLike> likes = new ArrayList<>();
+    private Set<PostLike> likes = new HashSet<>();
 
     // Defaultni konstruktor
     public Post() {}
@@ -51,10 +56,11 @@ public class Post {
         this.description = description;
         this.imageUrl = imageUrl;
         this.deleted = deleted;
+        this.likesCount = 0L;
     }
 
     // Konstruktor sa svim parametrima
-    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime) {
+    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime, Long likesCount) {
         this.description = description;
         this.imageUrl = imageUrl;
         this.userId = userId;
@@ -62,12 +68,11 @@ public class Post {
         this.latitude = latitude;
         this.longitude = longitude;
         this.creationTime = creationTime;
+        this.likesCount = likesCount;
     }
 
-    @Transient // Ovo oznacava da JPA ne treba da mapira ovo na kolonu u bazi
-    public int getLikesCount() {
-        return this.likes != null ? this.likes.size() : 0;
-    }
+    public Long getLikesCount() { return this.likesCount; }
+    public void setLikesCount(Long likesCount) { this.likesCount = likesCount; }
 
     // Getter-i i Setter-i
     public Long getId() {
@@ -136,7 +141,7 @@ public class Post {
         this.creationTime = creationTime;
     }
 
-    public List<PostLike> getLikes() {return likes;}
-    public void setLikes(List<PostLike> likes) {this.likes = likes;}
+    public Set<PostLike> getLikes() {return likes;}
+    public void setLikes(Set<PostLike> likes) {this.likes = likes;}
 
 }

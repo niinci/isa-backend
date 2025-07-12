@@ -7,7 +7,7 @@ public class PostDTO {
     private Long id;
     private String description;
     private String imageUrl;
-    private int likesCount;
+    private Long likesCount;
     private List<CommentDTO> comments;
     private Long userId;
     private double longitude;
@@ -39,11 +39,11 @@ public class PostDTO {
         this.imageUrl = imageUrl;
     }
 
-    public int getLikesCount() {
+    public Long getLikesCount() {
         return likesCount;
     }
 
-    public void setLikesCount(int likesCount) {
+    public void setLikesCount(Long likesCount) {
         this.likesCount = likesCount;
     }
 

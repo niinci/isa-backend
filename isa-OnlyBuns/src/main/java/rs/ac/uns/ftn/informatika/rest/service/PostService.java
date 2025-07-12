@@ -55,7 +55,8 @@ public class PostService {
                 false,
                 postDTO.getLatitude(),
                 postDTO.getLongitude(),
-                LocalDateTime.now()
+                null,
+                0L
         );
 
         Post savedPost = postRepository.save(post);
@@ -133,13 +134,13 @@ public class PostService {
         if (existingLike.isPresent()) {
             postLikeRepository.delete(existingLike.get());
             post.getLikes().remove(existingLike.get());
-            postRepository.save(post);
+            postRepository.decrementPostLikesCount(postId);
             return false;
         } else {
             PostLike newLike = new PostLike(post, user);
             postLikeRepository.save(newLike);
             post.getLikes().add(newLike);
-            postRepository.save(post);
+            postRepository.incrementLikesCount(postId);
             return true;
         }
     }
