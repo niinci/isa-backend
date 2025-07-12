@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
 
+import java.time.LocalDateTime;
+import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
@@ -20,4 +22,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Modifying
     @Query("UPDATE Post p SET p.likesCount = p.likesCount + 1 WHERE p.id = :postId")
     void incrementLikesCount(@Param("postId") Long postId);
+
+    int countByCreationTimeAfter(LocalDateTime time);
+    // Lista  korisnika koji su napravili postove
+    @Query("SELECT DISTINCT p.userId FROM Post p")
+    List<Long> findDistinctUserIds();
+
 }
