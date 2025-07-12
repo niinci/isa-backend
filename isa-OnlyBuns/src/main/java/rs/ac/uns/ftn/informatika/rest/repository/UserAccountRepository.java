@@ -2,6 +2,7 @@ package rs.ac.uns.ftn.informatika.rest.repository;
 
 //import org.apache.catalina.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 
@@ -25,6 +26,9 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     List<UserAccount> findByIsEnabledFalseAndVerificationCodeIsNotNullAndRegistrationDateBefore(LocalDateTime cutoff);
 
+    //vracam samo polje, a ne ceo entitet
+    @Query("SELECT u.id FROM UserAccount u")
+    List<Long> findAllUserIds();
 }
 
 
