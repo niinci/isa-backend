@@ -135,14 +135,12 @@ public class PostService {
             postLikeRepository.delete(existingLike.get());
             post.getLikes().remove(existingLike.get());
             postRepository.decrementPostLikesCount(postId);
-            postRepository.save(post);
             return false;
         } else {
             PostLike newLike = new PostLike(post, user);
             postLikeRepository.save(newLike);
             post.getLikes().add(newLike);
             postRepository.incrementLikesCount(postId);
-            postRepository.save(post);
             return true;
         }
     }
