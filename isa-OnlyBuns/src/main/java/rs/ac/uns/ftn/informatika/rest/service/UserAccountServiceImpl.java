@@ -23,6 +23,7 @@ import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
+import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -30,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
@@ -39,6 +41,10 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Autowired
     private AuthenticationManager authManager;
+
+    @Autowired
+    private PostRepository postRepository;
+
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
@@ -54,8 +60,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    public Page<UserAccount> findAll(Pageable pageable) {
-        return userAccountRepository.findAll(pageable);
+    public Page<UserAccountDTO> findAllUsersForDisplay(Pageable pageable) {
+        return userAccountRepository.findAll(pageable)
+                .map(this::mapToDTO); // mapira svakog UserAccount-a u UserAccountDTO
     }
 
     @Override
@@ -324,5 +331,19 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         return null;
     }
+    private UserAccountDTO mapToDTO(UserAccount user) {
+        UserAccountDTO dto = new UserAccountDTO();
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setUsername(user.getUsername());
+        dto.setFollowersCount(user.getFollowersCount());
+
+        //BITNOO!!
+        dto.setPostCount((int) postRepository.countByUserIdAndDeletedFalse(user.getId()));
+
+        return dto;
+    }
+
 
 }

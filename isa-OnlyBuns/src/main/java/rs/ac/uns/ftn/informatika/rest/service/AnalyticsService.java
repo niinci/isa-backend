@@ -35,28 +35,27 @@ public class AnalyticsService {
                 commentRepository.countByCommentedAtAfter(now.minusMonths(1)),
                 commentRepository.countByCommentedAtAfter(now.minusYears(1)),
 
-                postRepository.countByCreationTimeAfter(now.minusWeeks(1)),
-                postRepository.countByCreationTimeAfter(now.minusMonths(1)),
-                postRepository.countByCreationTimeAfter(now.minusYears(1))
+                postRepository.countByCreationTimeAfterAndDeletedFalse(now.minusWeeks(1)),
+                postRepository.countByCreationTimeAfterAndDeletedFalse(now.minusMonths(1)),
+                postRepository.countByCreationTimeAfterAndDeletedFalse(now.minusYears(1))
         );
     }
 
     public UserActivityDistributionDTO getUserActivityDistribution() {
-        //oni koji su kreirali bar jedan post
-        List<Long> postUsers = postRepository.findDistinctUserIds();
-        //korisnici koji su bar jednom kom
+        // Dohvati samo korisnike koji imaju postove koji nisu obrisani
+        List<Long> postUsers = postRepository.findDistinctUserIdsByDeletedFalse();
+
+        // Komentari ne moraju imati deleted, pa ostaje isto
         List<Long> commentUsers = commentRepository.findDistinctUserIds();
-        //svi korisnici
+
         List<Long> allUsers = userRepository.findAllUserIds();
 
-        //svi koji su napr postove
         Set<Long> usersWithPosts = new HashSet<>(postUsers);
-        //svi koji su ostav kom
+
         Set<Long> usersWithOnlyComments = commentUsers.stream()
                 .filter(id -> !usersWithPosts.contains(id))
                 .collect(Collectors.toSet());
 
-        //skup neaktivnih
         Set<Long> inactiveUsers = allUsers.stream()
                 .filter(id -> !usersWithPosts.contains(id) && !commentUsers.contains(id))
                 .collect(Collectors.toSet());
@@ -69,4 +68,5 @@ public class AnalyticsService {
                 (double) inactiveUsers.size() / total * 100
         );
     }
+
 }
