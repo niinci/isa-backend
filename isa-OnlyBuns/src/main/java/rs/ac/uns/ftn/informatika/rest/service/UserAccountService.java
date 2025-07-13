@@ -31,7 +31,7 @@ public interface UserAccountService {
 
     Collection<UserAccount> findAll();
     String getUsernameById(Long userId);
-    Page<UserAccount> findAll(Pageable pageable);
+    Page<UserAccountDTO> findAllUsersForDisplay(Pageable pageable);
     UserAccount findById(Long id);
 
     String verify(AuthRequest authRequest);
