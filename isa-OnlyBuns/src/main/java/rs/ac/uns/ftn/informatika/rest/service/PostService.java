@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.rest.domain.PostLike;
 import rs.ac.uns.ftn.informatika.rest.exception.ResourceNotFoundException;
+import rs.ac.uns.ftn.informatika.rest.repository.CommentRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
@@ -44,6 +45,8 @@ public class PostService {
 
     @Autowired
     private PostLikeRepository postLikeRepository;
+    @Autowired
+    private CommentRepository commentRepository;
 
     public List<Post> getAllPosts() {
         return postRepository.findAllByDeletedFalse();
@@ -95,14 +98,19 @@ public class PostService {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
     }
 
-    public void deletePost(Long postId,Long userId) {
+    @Transactional
+    public void deletePost(Long postId, Long userId) {
         Post post = getPostById(postId);
         if (!post.getUserId().equals(userId)) {
             throw new RuntimeException("Nemaš dozvolu da obrišeš ovaj post.");
         }
+
         post.setDeleted(true);
         postRepository.save(post);
+
+        commentRepository.deleteAll(commentRepository.findByPostId(postId));
     }
+
 
     public Post updatePost(Long postId, PostDTO postDTO,Long userId) {
         Post post = getPostById(postId);
