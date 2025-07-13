@@ -23,10 +23,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("UPDATE Post p SET p.likesCount = p.likesCount + 1 WHERE p.id = :postId")
     void incrementLikesCount(@Param("postId") Long postId);
 
-    int countByCreationTimeAfter(LocalDateTime time);
+   // int countByCreationTimeAfter(LocalDateTime time);
     // Lista  korisnika koji su napravili postove
-    @Query("SELECT DISTINCT p.userId FROM Post p")
-    List<Long> findDistinctUserIds();
+   // @Query("SELECT DISTINCT p.userId FROM Post p")
+    //List<Long> findDistinctUserIds();
 
     long countByDeletedFalse();
 
@@ -35,5 +35,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findTop5ByCreationTimeAfterAndDeletedFalseOrderByLikesCountDesc(LocalDateTime date);
 
     List<Post> findTop10ByDeletedFalseOrderByLikesCountDesc();
+
+    @Query("SELECT DISTINCT p.userId FROM Post p WHERE p.deleted = false")
+    List<Long> findDistinctUserIdsByDeletedFalse();
+
+    long countByUserIdAndDeletedFalse(Long userId);
+
+
 
 }

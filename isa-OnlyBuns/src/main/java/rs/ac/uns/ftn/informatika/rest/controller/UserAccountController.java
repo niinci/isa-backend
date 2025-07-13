@@ -56,16 +56,17 @@ public class UserAccountController {
 
     @Autowired GeocodingService geocodingService;
 
-
     @Operation(description = "Get all users with pagination", method = "GET")
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<UserAccount>> getAllUsers(
+    public ResponseEntity<Page<UserAccountDTO>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
-        Page<UserAccount> userAccounts = userAccountService.findAll(PageRequest.of(page, size));
+
+        Page<UserAccountDTO> userAccounts = userAccountService.findAllUsersForDisplay(PageRequest.of(page, size));
         return new ResponseEntity<>(userAccounts, HttpStatus.OK);
     }
+
 
     @Operation(description = "Create new user", method = "POST")
     @ApiResponses(value = {
