@@ -28,4 +28,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT DISTINCT p.userId FROM Post p")
     List<Long> findDistinctUserIds();
 
+    long countByDeletedFalse();
+
+    long countByCreationTimeAfterAndDeletedFalse(LocalDateTime date);
+
+    List<Post> findTop5ByCreationTimeAfterAndDeletedFalseOrderByLikesCountDesc(LocalDateTime date);
+
+    List<Post> findTop10ByDeletedFalseOrderByLikesCountDesc();
+
 }
