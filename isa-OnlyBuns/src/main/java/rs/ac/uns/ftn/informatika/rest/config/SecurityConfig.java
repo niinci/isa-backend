@@ -79,6 +79,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/comments/*/delete").hasRole("ADMIN")
                 .requestMatchers("/api/userAccount/admin/**").hasRole("ADMIN")
 
+                .requestMatchers(HttpMethod.OPTIONS, "/chat-websocket/**").permitAll()
+                .requestMatchers("/chat-websocket/**").permitAll()
+
                 // Sve ostalo zahteva autentifikaciju
                 .anyRequest().authenticated());
 

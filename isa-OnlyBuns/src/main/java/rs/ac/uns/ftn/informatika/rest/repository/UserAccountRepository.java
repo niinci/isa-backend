@@ -29,6 +29,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     //vracam samo polje, a ne ceo entitet
     @Query("SELECT u.id FROM UserAccount u")
     List<Long> findAllUserIds();
+
+
 }
 
 
