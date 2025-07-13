@@ -33,6 +33,9 @@ public class Post {
     @Column(nullable = false)
     private double longitude;
 
+    @Column(nullable = true)
+    private String locationAddress;
+
     @Column(nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime creationTime;
@@ -59,7 +62,7 @@ public class Post {
     }
 
     // Konstruktor sa svim parametrima
-    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime, Long likesCount) {
+    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime, Long likesCount, String locationAddress) {
         this.description = description;
         this.imageUrl = imageUrl;
         this.userId = userId;
@@ -68,6 +71,7 @@ public class Post {
         this.longitude = longitude;
         this.creationTime = creationTime;
         this.likesCount = likesCount;
+        this.locationAddress = locationAddress;
     }
 
     public Long getLikesCount() { return this.likesCount; }
@@ -142,5 +146,8 @@ public class Post {
 
     public Set<PostLike> getLikes() {return likes;}
     public void setLikes(Set<PostLike> likes) {this.likes = likes;}
+
+    public String getLocationAddress() { return locationAddress; }
+    public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
 
 }
