@@ -1,7 +1,9 @@
 package rs.ac.uns.ftn.informatika.rest.service;
 
+//import jakarta.persistence.Cacheable;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.rest.domain.PostLike;
@@ -18,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -188,6 +191,35 @@ public class PostService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
     }
+
+    @Cacheable("totalPosts")
+    public long getTotalPostCount() {
+        return postRepository.countByDeletedFalse();
+    }
+
+    @Cacheable("postsLastMonth")
+    public long getPostCountLastMonth() {
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minus(1, ChronoUnit.MONTHS);
+        return postRepository.countByCreationTimeAfterAndDeletedFalse(oneMonthAgo);
+    }
+
+    @Cacheable("top5PostsLast7Days")
+    public List<Post> getTop5PostsLast7Days() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return postRepository.findTop5ByCreationTimeAfterAndDeletedFalseOrderByLikesCountDesc(sevenDaysAgo);
+    }
+
+    @Cacheable("top10PostsEver")
+    public List<Post> getTop10PostsEver() {
+        return postRepository.findTop10ByDeletedFalseOrderByLikesCountDesc();
+    }
+
+    @Cacheable("top10UsersByLikesGivenLast7Days")
+    public List<UserAccount> getTop10UsersByLikesGivenLast7Days() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return postLikeRepository.findTop10UsersByLikesGivenAfter(sevenDaysAgo);
+    }
+
 
 
 }

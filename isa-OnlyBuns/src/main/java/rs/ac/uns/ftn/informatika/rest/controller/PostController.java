@@ -14,6 +14,7 @@ import rs.ac.uns.ftn.informatika.rest.service.ImageService;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
+import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
 
 
 
@@ -22,15 +23,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
-import java.util.Collections;
+import java.time.LocalDateTime;
+import java.util.*;
 
-import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -44,6 +40,9 @@ public class PostController {
 
     @Autowired
     private UserAccountRepository userAccountRepository;
+
+    @Autowired
+    private PostLikeRepository postLikeRepository;
 
     @GetMapping
     public List<Post> getAllPosts() {
@@ -148,4 +147,43 @@ public class PostController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/trends")
+    public ResponseEntity<?> getTrends() {
+        Map<String, Object> response = new HashMap<>();
+
+        // Ukupan broj objava
+        long totalPosts = postService.getAllPosts().size();
+        response.put("totalPosts", totalPosts);
+
+        // Broj objava u poslednjih mesec dana
+        long postsLastMonth = postService.getAllPosts().stream()
+                .filter(post -> post.getCreationTime().isAfter(LocalDateTime.now().minusMonths(1)))
+                .count();
+        response.put("postsLastMonth", postsLastMonth);
+
+        // Top 5 postova u poslednjih 7 dana (po broju lajkova)
+        List<Post> top5Last7Days = postService.getAllPosts().stream()
+                .filter(post -> post.getCreationTime().isAfter(LocalDateTime.now().minusDays(7)))
+                .sorted(Comparator.comparing(Post::getLikesCount).reversed())
+                .limit(5)
+                .collect(Collectors.toList());
+        response.put("top5PostsLast7Days", top5Last7Days);
+
+        // Top 10 postova ikada
+        List<Post> top10Ever = postService.getAllPosts().stream()
+                .sorted(Comparator.comparing(Post::getLikesCount).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+        response.put("top10PostsEver", top10Ever);
+
+        // Top 10 korisnika koji su dali najviše lajkova u poslednjih 7 dana
+        List<UserAccount> top10Users = postLikeRepository
+                .findTop10UsersByLikesGivenAfter(LocalDateTime.now().minusDays(7));
+        response.put("top10UsersByLikesGivenLast7Days", top10Users);
+
+        return ResponseEntity.ok(response);
+    }
+
+
 }
