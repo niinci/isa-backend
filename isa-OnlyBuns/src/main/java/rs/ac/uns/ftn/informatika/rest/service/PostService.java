@@ -31,6 +31,9 @@ import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
 import org.springframework.data.domain.Sort;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import jakarta.transaction.Transactional;
+import rs.ac.uns.ftn.informatika.rest.util.LocationCacheManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 
@@ -44,6 +47,11 @@ public class PostService {
 
     @Autowired
     private PostLikeRepository postLikeRepository;
+
+    @Autowired
+    private LocationCacheManager locationCacheManager;
+
+    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     public List<Post> getAllPosts() {
         return postRepository.findAllByDeletedFalse();
@@ -74,7 +82,43 @@ public class PostService {
             System.out.println("User not found with id: " + postDTO.getUserId());
         }
 
+        // KESIRANJE LOKACIJE NAKON STO JE OBJAVA SACUVANA
+        if (savedPost.getId() != null) {
+            locationCacheManager.putLocation(
+                    savedPost.getId(),
+                    savedPost.getLongitude(),
+                    savedPost.getLatitude(),
+                    savedPost.getLocationAddress()
+            );
+            logger.info("LOKACIJA KEŠIRANA: Post ID: {}", savedPost.getId());
+        }
+
         return savedPost;
+    }
+
+    public LocationCacheManager.LocationData getPostLocationFromCacheOrDb(Long postId) {
+        LocationCacheManager.LocationData cachedLocation = locationCacheManager.getLocation(postId);
+        if (cachedLocation != null) {
+            System.out.println("Lokacija za post ID " + postId + " pronađena u kešu.");
+            return cachedLocation;
+        } else {
+            System.out.println("Lokacija za post ID " + postId + " nije pronađena u kešu, dohvatam iz baze.");
+            Post post = postRepository.findById(postId).orElse(null);
+            if (post != null) {
+                locationCacheManager.putLocation(
+                        post.getId(),
+                        post.getLongitude(),
+                        post.getLatitude(),
+                        post.getLocationAddress()
+                );
+                return new LocationCacheManager.LocationData(
+                        post.getLongitude(),
+                        post.getLatitude(),
+                        post.getLocationAddress()
+                );
+            }
+        }
+        return null;
     }
 
     private String saveImage(MultipartFile image) throws IOException {
@@ -92,6 +136,12 @@ public class PostService {
     }
 
     public Post getPostById(Long postId) {
+        /*LocationCacheManager.LocationData cachedLocation = locationCacheManager.getLocation(postId);
+        if (cachedLocation != null) {
+            logger.info("DEMO KEŠ HIT: Lokacija za Post ID {} PRONAĐENA U KEŠU.", postId);
+        } else {
+            logger.info("DEMO KEŠ MISS: Lokacija za Post ID {} NIJE PRONAĐENA U KEŠU, dohvatam iz baze.", postId);
+        }*/
         return postRepository.findById(postId)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + postId));
     }
