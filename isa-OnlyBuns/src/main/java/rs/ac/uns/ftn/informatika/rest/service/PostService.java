@@ -59,7 +59,8 @@ public class PostService {
                 postDTO.getLatitude(),
                 postDTO.getLongitude(),
                 null,
-                0L
+                0L,
+                postDTO.getLocationAddress()
         );
 
         Post savedPost = postRepository.save(post);

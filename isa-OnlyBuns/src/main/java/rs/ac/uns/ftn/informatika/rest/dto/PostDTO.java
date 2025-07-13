@@ -14,6 +14,8 @@ public class PostDTO {
     private double latitude;
     private LocalDateTime createdAt;
     private String imageBase64;
+    private String address;
+    private String locationAddress;
 
     public Long getId() {
         return id;
@@ -71,4 +73,6 @@ public class PostDTO {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getImageBase64() { return imageBase64; }
     public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
+    public String getLocationAddress() { return locationAddress; }
+    public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
 }
