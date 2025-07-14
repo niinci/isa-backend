@@ -59,6 +59,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/userAccount/profile/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments/post/**").permitAll()
                 .requestMatchers("/api/userAccount/location").hasRole("USER")
+                .requestMatchers("/mq/**").hasRole("USER")
 
                 // Swagger endpoints
                 .requestMatchers("/swagger-ui/**").permitAll()
