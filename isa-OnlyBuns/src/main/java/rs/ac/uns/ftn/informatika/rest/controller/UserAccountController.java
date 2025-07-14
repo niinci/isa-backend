@@ -241,4 +241,30 @@ public class UserAccountController {
                         .body("Geokodiranje nije uspelo"));
     }
 
+    @PreAuthorize("hasAnyRole('USER')") // ili po potrebi
+    @GetMapping("/{id}")
+    public ResponseEntity<UserInfo> getUserById(@PathVariable("id") Long id) {
+        UserAccount user = userAccountRepository.findById(id).orElse(null);
+        if (user == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        UserInfo userInfo = new UserInfo();
+        Address usersAddress = user.convertJsonToAddress();
+        userInfo.id = user.getId(); 
+        userInfo.address = usersAddress;
+        userInfo.email = user.getEmail();
+        userInfo.firstName = user.getFirstName();
+        userInfo.lastName = user.getLastName();
+        return new ResponseEntity<>(userInfo, HttpStatus.OK);
+    }
+    @Operation(description = "Search users by username", method = "GET")
+    @GetMapping(value = "/search/username", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<UserAccount>> searchByUsername(@RequestParam("username") String username) {
+        List<UserAccount> users = userAccountService.searchByUsername(username);
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+
+
 }

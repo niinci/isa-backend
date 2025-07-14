@@ -28,19 +28,17 @@ public interface UserAccountService {
      * Dobijanje profila korisnika - javno za sve
      */
     UserAccount getUserProfile(Long userId);
-
     Collection<UserAccount> findAll();
     String getUsernameById(Long userId);
     Page<UserAccountDTO> findAllUsersForDisplay(Pageable pageable);
     UserAccount findById(Long id);
-
     String verify(AuthRequest authRequest);
     void sendVerificationEmail(UserAccount savedAcc, HttpServletRequest request) throws Exception;
     boolean verifyVerificationCode(String verificationCode);
-
     List<UserAccount> searchByFirstName(String firstName);
     List<UserAccount> searchByLastName(String lastName);
     List<UserAccount> searchByEmail(String email);
+    public List<UserAccount> searchByUsername(String username);
     List<UserAccount> searchByPostCount(int min, int max);
     List<UserAccount> sortByFollowingCount();
     List<UserAccount> sortByEmail();
