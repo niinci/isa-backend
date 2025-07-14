@@ -34,7 +34,7 @@ public class UserAccountDTO {
     }
 
     @Min(value = 0)
-    private int followersCount;
+    private Long followersCount;
 
     @Min(value = 0)
     private int postCount;
@@ -78,11 +78,11 @@ public class UserAccountDTO {
         this.password = password;
     }
 
-    public int getFollowersCount() {
+    public Long getFollowersCount() {
         return followersCount;
     }
 
-    public void setFollowersCount(int followersCount) {
+    public void setFollowersCount(long followersCount) {
         this.followersCount = followersCount;
     }
 
