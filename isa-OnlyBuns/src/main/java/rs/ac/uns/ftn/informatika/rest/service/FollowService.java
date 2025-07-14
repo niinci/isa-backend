@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import rs.ac.uns.ftn.informatika.rest.domain.Follow;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
+import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,43 +16,63 @@ import java.util.stream.Collectors;
 public class FollowService {
 
     private final FollowRepository followRepository;
-    private final UserAccountServiceImpl userAccountServiceImpl;
+    private final UserAccountRepository userAccountRepository;
 
-    public FollowService(FollowRepository followRepository, UserAccountServiceImpl userAccountServiceImpl) {
+
+    private final UserAccountService userAccountService;
+
+    public FollowService(FollowRepository followRepository, UserAccountService userAccountService, UserAccountRepository userAccountRepository) {
         this.followRepository = followRepository;
-        this.userAccountServiceImpl = userAccountServiceImpl;
+        this.userAccountService = userAccountService;
+        this.userAccountRepository = userAccountRepository;
     }
+
+
 
     public boolean isFollowing(Long followerId, Long followingId) {
         return followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);
     }
 
+    @Transactional
     public Follow follow(Long followerId, Long followingId) {
+        // Zaključaj korisnika koji se prati
+        userAccountRepository.findByIdWithLock(followingId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         if (isFollowing(followerId, followingId)) {
             throw new IllegalStateException("Already following this user");
         }
+
         Follow follow = new Follow(followerId, followingId);
-        return followRepository.save(follow);
+        Follow savedFollow = followRepository.save(follow);
+
+        userAccountRepository.incrementFollowersCount(followingId);
+
+        return savedFollow;
     }
+
 
     public void unfollow(Long followerId, Long followingId) {
         if (!isFollowing(followerId, followingId)) {
             throw new IllegalStateException("Not following this user");
         }
         followRepository.deleteByFollowerIdAndFollowingId(followerId, followingId);
+
+        // DEKREMENTUJ broj pratilaca korisnika koji se prati (followingId)
+        userAccountRepository.decrementFollowersCount(followingId);
     }
 
     public List<UserAccount> getFollowers(Long userId) {
         // Pratioci su oni koji prate userId, tj. svi followerId-ovi gde je followingId = userId
         return followRepository.findByFollowingId(userId).stream()
-                .map(follow -> userAccountServiceImpl.findById(follow.getFollowerId()))
+                .map(follow -> userAccountService.findById(follow.getFollowerId()))
                 .collect(Collectors.toList());
     }
 
     public List<UserAccount> getFollowing(Long userId) {
         // Lista korisnika koje userId prati, tj. followingId-ovi za koje followerId = userId
         return followRepository.findByFollowerId(userId).stream()
-                .map(follow -> userAccountServiceImpl.findById(follow.getFollowingId()))
+                .map(follow -> userAccountService.findById(follow.getFollowingId()))
                 .collect(Collectors.toList());
     }
 }
