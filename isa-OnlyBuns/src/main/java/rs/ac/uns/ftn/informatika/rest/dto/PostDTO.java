@@ -16,6 +16,7 @@ public class PostDTO {
     private String imageBase64;
     private String address;
     private String locationAddress;
+    private boolean isAdvertisable;
 
     public Long getId() {
         return id;
@@ -75,4 +76,6 @@ public class PostDTO {
     public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
     public String getLocationAddress() { return locationAddress; }
     public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
+    public boolean getIsAdvertisable() { return isAdvertisable; }
+    public void setIsAdvertisable(boolean isAdvertisable) { this.isAdvertisable = isAdvertisable; }
 }

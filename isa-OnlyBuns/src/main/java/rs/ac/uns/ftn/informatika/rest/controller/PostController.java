@@ -185,5 +185,10 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{postId}/advertisable")
+    public ResponseEntity<Void> updatePostAdvertisableStatus(@PathVariable Long postId, @RequestBody boolean isAdvertisable) {
+        postService.updatePostAdvertisableStatus(postId, isAdvertisable);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -71,7 +71,8 @@ public class PostService {
                 postDTO.getLongitude(),
                 null,
                 0L,
-                postDTO.getLocationAddress()
+                postDTO.getLocationAddress(),
+                false
         );
 
         Post savedPost = postRepository.save(post);
@@ -225,6 +226,7 @@ public class PostService {
         dto.setLongitude(post.getLongitude());
         dto.setLatitude(post.getLatitude());
         dto.setCreatedAt(post.getCreationTime());
+        dto.setIsAdvertisable(post.getIsAdvertisable());
         return dto;
     }
 
@@ -279,6 +281,13 @@ public class PostService {
         return postLikeRepository.findTop10UsersByLikesGivenAfter(sevenDaysAgo);
     }
 
+    @Transactional
+    public void updatePostAdvertisableStatus(Long postId, boolean isAdvertisable)
+    {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + postId));
 
-
+        post.SetIsAdvertisable(isAdvertisable);
+        postRepository.save(post);
+    }
 }

@@ -50,7 +50,7 @@ public class PostServiceConcurrencyTest {
         userRepository.deleteAll();
 
         // test post
-        testPost = new Post("Test opis", "test_image.jpg", 1L, false, 0.0, 0.0, LocalDateTime.now(), 0L, null);
+        testPost = new Post("Test opis", "test_image.jpg", 1L, false, 0.0, 0.0, LocalDateTime.now(), 0L, null, false);
         testPost.setUserId(1L);
         testPost = postRepository.save(testPost);
 

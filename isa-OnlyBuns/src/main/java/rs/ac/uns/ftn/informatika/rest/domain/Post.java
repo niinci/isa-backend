@@ -47,6 +47,9 @@ public class Post {
     @Column(name = "likes_count", nullable = false)
     private Long likesCount = 0L;
 
+    @Column(nullable = false)
+    private boolean isAdvertisable = false;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PostLike> likes = new HashSet<>();
 
@@ -59,10 +62,11 @@ public class Post {
         this.imageUrl = imageUrl;
         this.deleted = deleted;
         this.likesCount = 0L;
+        this.isAdvertisable = false;
     }
 
     // Konstruktor sa svim parametrima
-    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime, Long likesCount, String locationAddress) {
+    public Post(String description, String imageUrl, Long userId, boolean deleted, double latitude, double longitude, LocalDateTime creationTime, Long likesCount, String locationAddress, boolean isAdvertisable) {
         this.description = description;
         this.imageUrl = imageUrl;
         this.userId = userId;
@@ -72,6 +76,7 @@ public class Post {
         this.creationTime = creationTime;
         this.likesCount = likesCount;
         this.locationAddress = locationAddress;
+        this.isAdvertisable = isAdvertisable;
     }
 
     public Long getLikesCount() { return this.likesCount; }
@@ -150,4 +155,6 @@ public class Post {
     public String getLocationAddress() { return locationAddress; }
     public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
 
+    public boolean getIsAdvertisable() { return isAdvertisable; }
+    public void SetIsAdvertisable(boolean isAdvertisable) { this.isAdvertisable = isAdvertisable; }
 }
