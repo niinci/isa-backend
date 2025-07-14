@@ -4,7 +4,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -20,7 +20,7 @@ public class RabbitMQConfig {
     private String queueName;
 
     @Value("${rabbitmq.exchange.name}")
-    private String exchange;
+    private String exchangeName;
 
     @Value("${rabbitmq.routing.key}")
     private String routingKey;
@@ -33,14 +33,14 @@ public class RabbitMQConfig {
 
     // Bean za Exchange (razmjenu)
     @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange(exchange);
+    public FanoutExchange  exchange() {
+        return new FanoutExchange (exchangeName);
     }
 
     // Bean za Binding (povezivanje reda i razmjene)
     @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(routingKey);
+    public Binding binding(Queue queue, FanoutExchange exchange) {
+        return BindingBuilder.bind(queue).to(exchange);
     }
 
     // Bean za konverter poruka (JSON)
