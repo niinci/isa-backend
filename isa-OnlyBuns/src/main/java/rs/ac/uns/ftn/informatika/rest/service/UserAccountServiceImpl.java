@@ -24,6 +24,7 @@ import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
+import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -344,6 +345,12 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         return dto;
     }
+
+    public List<UserAccount> searchByUsername(String username) {
+
+        return userAccountRepository.findByUsernameContainingIgnoreCase(username);
+    }
+
 
 
 }

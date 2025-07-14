@@ -12,9 +12,11 @@ public class Follow {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    //ID korisnika koji prati (ulogovani korisnik)
     @Column(name = "follower_id", nullable = false)
     private Long followerId;
 
+    //followingId je ID korisnika koji se prati (profil koji gledamo)
     @Column(name = "following_id", nullable = false)
     private Long followingId;
 
