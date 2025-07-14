@@ -1,13 +1,16 @@
 package rs.ac.uns.ftn.informatika.rest.service;
 
 //import jakarta.persistence.Cacheable;
+import jakarta.persistence.EntityNotFoundException;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.rest.domain.PostLike;
+import rs.ac.uns.ftn.informatika.rest.dto.AdNotificationDTO;
 import rs.ac.uns.ftn.informatika.rest.exception.ResourceNotFoundException;
+import rs.ac.uns.ftn.informatika.rest.rabbitmq.producer.AdNotificationProducer;
 import rs.ac.uns.ftn.informatika.rest.repository.CommentRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
@@ -53,6 +56,9 @@ public class PostService {
 
     @Autowired
     private LocationCacheManager locationCacheManager;
+
+    @Autowired
+    private AdNotificationProducer adNotificationProducer;
 
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
@@ -282,12 +288,27 @@ public class PostService {
     }
 
     @Transactional
-    public void updatePostAdvertisableStatus(Long postId, boolean isAdvertisable)
-    {
+    public void updatePostAdvertisableStatus(Long postId, boolean isAdvertisable) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with ID: " + postId));
+                .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
 
-        post.SetIsAdvertisable(isAdvertisable);
-        postRepository.save(post);
+        if (post.getIsAdvertisable() != isAdvertisable) {  // da li se status mijenja
+            post.setIsAdvertisable(isAdvertisable);
+            postRepository.save(post);
+
+            // AKO JE POSTAVLJENA KAO REKLAMIRANA (TRUE), POSALJI PORUKU NA RABBITMQ
+            if (isAdvertisable) {
+                UserAccount user = userRepository.findById(post.getUserId())
+                        .orElseThrow(() -> new EntityNotFoundException("User not found for post with id: " + postId));
+
+                AdNotificationDTO notificationDTO = new AdNotificationDTO(
+                        post.getId(),
+                        post.getDescription(),
+                        user.getUsername(),
+                        LocalDateTime.now()
+                );
+                adNotificationProducer.sendAdNotification(notificationDTO);
+            }
+        }
     }
 }

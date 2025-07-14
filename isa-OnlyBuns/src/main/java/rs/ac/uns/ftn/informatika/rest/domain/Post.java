@@ -156,5 +156,5 @@ public class Post {
     public void setLocationAddress(String locationAddress) { this.locationAddress = locationAddress; }
 
     public boolean getIsAdvertisable() { return isAdvertisable; }
-    public void SetIsAdvertisable(boolean isAdvertisable) { this.isAdvertisable = isAdvertisable; }
+    public void setIsAdvertisable(boolean isAdvertisable) { this.isAdvertisable = isAdvertisable; }
 }
