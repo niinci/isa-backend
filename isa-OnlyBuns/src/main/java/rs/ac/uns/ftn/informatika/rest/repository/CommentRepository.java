@@ -19,4 +19,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     @Query("SELECT DISTINCT c.userId FROM Comment c")
     List<Long> findDistinctUserIds();
 
+    // Broj komentara korisnika u posljednjih sat vremena
+    @Query("SELECT COUNT(c) FROM Comment c WHERE c.userId = :userId AND c.commentedAt >= :oneHourAgo")
+    long countCommentsByUserIdAndCommentedAtAfter(Long userId, LocalDateTime oneHourAgo);
 }
