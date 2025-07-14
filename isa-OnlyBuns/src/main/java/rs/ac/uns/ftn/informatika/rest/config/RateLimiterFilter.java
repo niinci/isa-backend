@@ -1,4 +1,4 @@
-/*package rs.ac.uns.ftn.informatika.rest.config;
+package rs.ac.uns.ftn.informatika.rest.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,15 +27,21 @@ public class RateLimiterFilter extends OncePerRequestFilter {
 
         String identifier = getClientIdentifier(request);
         Role role = getUserRole();
+        String requestUri = request.getRequestURI();
+        String httpMethod = request.getMethod();
 
-        if (!rateLimiterService.isRequestAllowed(identifier, role)) {
-            response.setStatus(429);  // HTTP status code za Too Many Requests
+        System.out.println("RateLimiterFilter: Incoming request - URI: " + requestUri + ", Method: " + httpMethod);
+        System.out.println("RateLimiterFilter: Client Identifier: " + identifier + ", User Role: " + role);
+
+        if (!rateLimiterService.isRequestAllowed(identifier, role, requestUri, httpMethod)) {
+            response.setStatus(429); // HTTP Status 429: Too Many Requests
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"Too many requests. Please try again later.\"}");
+            response.getWriter().write("{\"error\":\"Too many requests for this action. Please try again later.\"}");
+            System.out.println("RateLimiterFilter: Request BLOCKED (429) for " + identifier + " on " + requestUri);
             return;
         }
 
-
+        System.out.println("RateLimiterFilter: Request ALLOWED for " + identifier + " on " + requestUri);
         filterChain.doFilter(request, response);
     }
 
@@ -45,16 +51,20 @@ public class RateLimiterFilter extends OncePerRequestFilter {
         if (auth != null && auth.isAuthenticated() &&
                 auth.getPrincipal() instanceof UserPrincipal) {
             UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+            System.out.println("RateLimiterFilter.getClientIdentifier: Authenticated user email: " + principal.getUserAccount().getEmail());
             return principal.getUserAccount().getEmail();
         }
 
-        // For unauthenticated users, use IP address
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null) {
-            return xForwardedFor.split(",")[0].trim();
+            String ip = xForwardedFor.split(",")[0].trim();
+            System.out.println("RateLimiterFilter.getClientIdentifier: Unauthenticated (X-Forwarded-For): " + ip);
+            return ip;
         }
 
-        return request.getRemoteAddr();
+        String remoteAddr = request.getRemoteAddr();
+        System.out.println("RateLimiterFilter.getClientIdentifier: Unauthenticated (Remote Addr): " + remoteAddr);
+        return remoteAddr;
     }
 
     private Role getUserRole() {
@@ -63,9 +73,11 @@ public class RateLimiterFilter extends OncePerRequestFilter {
         if (auth != null && auth.isAuthenticated() &&
                 auth.getPrincipal() instanceof UserPrincipal) {
             UserPrincipal principal = (UserPrincipal) auth.getPrincipal();
+            System.out.println("RateLimiterFilter.getUserRole: Authenticated user role: " + principal.getUserAccount().getRole());
             return principal.getUserAccount().getRole();
         }
 
+        System.out.println("RateLimiterFilter.getUserRole: User not authenticated. Returning UNAUTHENTICATED role.");
         return Role.UNAUTHENTICATED;
     }
-}*/
+}

@@ -16,11 +16,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class JwtService {
 
-    private String secretKey = "";
+    @Value("${jwt.secret}")
+    private String secretKey;
+    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 24; // 24h
 
     public JwtService() {
         try {
@@ -39,7 +42,7 @@ public class JwtService {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 600000))
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME)) // bilo postavljeno na 600000, ako mora vrati
                 .signWith(getKey())
                 .compact();
     }

@@ -57,6 +57,7 @@ public class CommentService {
      dto.setId(comment.getId());
      dto.setContent(comment.getContent());
      dto.setUserId(comment.getUserId());
+     dto.setCommentedAt(comment.getCommentedAt());
 
      System.out.println("mapToDTO - comment userId: " + comment.getUserId());
 
