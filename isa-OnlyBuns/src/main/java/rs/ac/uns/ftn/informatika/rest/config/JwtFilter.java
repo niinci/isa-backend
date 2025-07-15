@@ -15,8 +15,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import rs.ac.uns.ftn.informatika.rest.service.JwtService;
 import rs.ac.uns.ftn.informatika.rest.service.MyUserDetailsService;
-
 import java.io.IOException;
+import rs.ac.uns.ftn.informatika.rest.service.UserActivityService;
+import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
+import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
+
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -25,6 +28,13 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Autowired
     ApplicationContext context;
+
+    @Autowired
+    private UserActivityService userActivityService;
+
+    @Autowired
+    private UserAccountRepository userRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
@@ -41,6 +51,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                // azuriranje lastActivityDate-a
+                if (userDetails instanceof UserAccount) {
+                    UserAccount userAccount = (UserAccount) userDetails;
+                    userActivityService.recordUserActivity(userAccount.getId());
+                } else {
+                    UserAccount userAccount = userRepository.findByEmail(username).orElse(null);
+                    if (userAccount != null) {
+                        userActivityService.recordUserActivity(userAccount.getId());
+                    }
+                }
             }
         }
         filterChain.doFilter(request, response);

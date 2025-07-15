@@ -1,5 +1,4 @@
 package rs.ac.uns.ftn.informatika.rest.config;
-import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.proxy.NoOp;
 import org.springframework.context.annotation.Bean;
@@ -65,6 +64,9 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
+
+                // pristup /actuator/prometheus endpointu
+                .requestMatchers("/actuator/**").permitAll()
 
                 // User endpoints - potrebna USER uloga
                 .requestMatchers("/api/posts/create").hasRole("USER")

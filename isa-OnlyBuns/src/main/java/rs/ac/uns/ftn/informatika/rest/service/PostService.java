@@ -1,8 +1,11 @@
 package rs.ac.uns.ftn.informatika.rest.service;
 
 //import jakarta.persistence.Cacheable;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.catalina.User;
+import io.micrometer.core.annotation.Timed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -40,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Service
-
 public class PostService {
 
     @Autowired
@@ -63,6 +65,9 @@ public class PostService {
     @Autowired
     private ImageService imageService;
 
+    @Autowired
+    private MeterRegistry meterRegistry;
+
 
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
@@ -70,44 +75,51 @@ public class PostService {
         return postRepository.findAllByDeletedFalse();
     }
 
+    // @Timed("post.create.duration")
     public Post createPost(PostDTO postDTO) throws IOException {
+        Timer.Sample sample = Timer.start(meterRegistry);
 
-        Post post = new Post(
-                postDTO.getDescription(),
-                postDTO.getImageUrl(),
-                postDTO.getUserId(),
-                false,
-                postDTO.getLatitude(),
-                postDTO.getLongitude(),
-                null,
-                0L,
-                postDTO.getLocationAddress(),
-                false
-        );
-
-        Post savedPost = postRepository.save(post);
-
-        Optional<UserAccount> userOpt = userRepository.findById(postDTO.getUserId());
-        if(userOpt.isPresent()) {
-            UserAccount user = userOpt.get();
-            user.setPostCount(user.getPostCount() + 1);
-            userRepository.save(user);
-        } else {
-            System.out.println("User not found with id: " + postDTO.getUserId());
-        }
-
-        // KESIRANJE LOKACIJE NAKON STO JE OBJAVA SACUVANA
-        if (savedPost.getId() != null) {
-            locationCacheManager.putLocation(
-                    savedPost.getId(),
-                    savedPost.getLongitude(),
-                    savedPost.getLatitude(),
-                    savedPost.getLocationAddress()
+        try {
+            Post post = new Post(
+                    postDTO.getDescription(),
+                    postDTO.getImageUrl(),
+                    postDTO.getUserId(),
+                    false,
+                    postDTO.getLatitude(),
+                    postDTO.getLongitude(),
+                    null,
+                    0L,
+                    postDTO.getLocationAddress(),
+                    false
             );
-            logger.info("LOKACIJA KEŠIRANA: Post ID: {}", savedPost.getId());
-        }
 
-        return savedPost;
+            Post savedPost = postRepository.save(post);
+
+            Optional<UserAccount> userOpt = userRepository.findById(postDTO.getUserId());
+            if(userOpt.isPresent()) {
+                UserAccount user = userOpt.get();
+                user.setPostCount(user.getPostCount() + 1);
+                userRepository.save(user);
+            } else {
+                System.out.println("User not found with id: " + postDTO.getUserId());
+            }
+
+            // KESIRANJE LOKACIJE NAKON STO JE OBJAVA SACUVANA
+            if (savedPost.getId() != null) {
+                locationCacheManager.putLocation(
+                        savedPost.getId(),
+                        savedPost.getLongitude(),
+                        savedPost.getLatitude(),
+                        savedPost.getLocationAddress()
+                );
+                logger.info("LOKACIJA KEŠIRANA: Post ID: {}", savedPost.getId());
+            }
+
+            return savedPost;
+        } finally {
+
+            sample.stop(meterRegistry.timer("post_create_duration_seconds", "component", "PostService"));
+        }
     }
 
     public LocationCacheManager.LocationData getPostLocationFromCacheOrDb(Long postId) {
