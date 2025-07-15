@@ -109,8 +109,8 @@ public class RateLimiterService {
             if ("POST".equalsIgnoreCase(httpMethod)) {
                 actionType = "COMMENT_POST";
             }
-        } else if (uri.matches("/api/follows/follow(\\?.*)?$")) {
-            actionType = "FOLLOW_USER";
+      //  } else if (uri.matches("/api/follows/follow(\\?.*)?$")) {
+      //      actionType = "FOLLOW_USER";
         } else if (uri.equals("/api/userAccount/login")) {
             actionType = "LOGIN_ATTEMPT";
         } else if (uri.matches("/api/posts/\\d+/like")) {
