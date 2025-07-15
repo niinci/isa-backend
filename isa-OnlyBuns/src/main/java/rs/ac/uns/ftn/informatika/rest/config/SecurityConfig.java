@@ -66,6 +66,9 @@ public class SecurityConfig {
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll()
 
+                // pristup /actuator/prometheus endpointu
+                .requestMatchers("/actuator/**").permitAll()
+
                 // User endpoints - potrebna USER uloga
                 .requestMatchers("/api/posts/create").hasRole("USER")
                 .requestMatchers("/api/posts/*/like").hasRole("USER")
