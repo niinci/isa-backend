@@ -49,7 +49,7 @@ public class ImageController {
                 imageCacheManager.put(imageName, resource); // keširaj u Caffeine
                 return ResponseEntity.ok()
                         .contentType(MediaType.IMAGE_JPEG)
-                        .cacheControl(CacheControl.maxAge(1, TimeUnit.HOURS)) // <--- I OVDE
+                        .cacheControl(CacheControl.maxAge(365, TimeUnit.DAYS).cachePublic())
                         .body(resource);
             } else {
                 throw new FileNotFoundException("Image not found: " + imageName);
