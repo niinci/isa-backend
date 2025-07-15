@@ -355,4 +355,9 @@ public class PostService {
             }
         }
     }
+    //vraca postove pratilaca, a i svoje postove
+    public List<Post> getPostsFromFollowedUsers(Long userId) {
+        return postRepository.findPostsByFollowedUsers(userId);
+    }
+
 }
