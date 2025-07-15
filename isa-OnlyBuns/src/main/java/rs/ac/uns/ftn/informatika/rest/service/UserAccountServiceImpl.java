@@ -22,6 +22,7 @@ import rs.ac.uns.ftn.informatika.rest.domain.Role;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
+import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
@@ -45,6 +46,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Autowired
     private PostRepository postRepository;
+    @Autowired
+    private FollowRepository followRepository;
 
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
@@ -338,7 +341,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setUsername(user.getUsername());
-        dto.setFollowersCount(user.getFollowersCount());
+        long followersCount = followRepository.countByFollowingId(user.getId());
+        dto.setFollowersCount(followersCount);
+
 
         //BITNOO!!
         dto.setPostCount((int) postRepository.countByUserIdAndDeletedFalse(user.getId()));
@@ -350,6 +355,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
         return userAccountRepository.findByUsernameContainingIgnoreCase(username);
     }
+
 
 
 
