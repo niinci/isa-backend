@@ -6,4 +6,14 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# Maven build output
 target/
+
+# Ignore all .jar files anywhere in the project
+*.jar
+
+# (opciono) Ignore folders that might store jars manually
+/lib/
+/libs/
+/dependencies/

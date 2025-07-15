@@ -9,6 +9,7 @@ import rs.ac.uns.ftn.informatika.rest.domain.AuthRequest;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserAccountWithoutAddressDto;
 import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 
 import java.util.Collection;
@@ -65,4 +66,5 @@ public interface UserAccountService {
 
     boolean changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO);
     UserAccount updateProfile(Long userId, @Valid UserProfileEditDTO profileData);
-}
+    public List<UserAccountWithoutAddressDto> searchUsers(String query);
+    }

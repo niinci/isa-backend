@@ -11,15 +11,15 @@ public class ChatGroup {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    //naziv ceta
     private String name;
 
     @ManyToOne
     private UserAccount admin;
-
+    //lista clanova
     @ManyToMany
     private List<UserAccount> members = new ArrayList<>();
-
+    //lista poruka
     @OneToMany(mappedBy = "chatGroup", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChatMessage> messages = new ArrayList<>();
 

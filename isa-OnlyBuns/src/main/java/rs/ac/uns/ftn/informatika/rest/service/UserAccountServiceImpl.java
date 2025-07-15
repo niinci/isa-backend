@@ -21,6 +21,7 @@ import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.domain.Role;
 import rs.ac.uns.ftn.informatika.rest.dto.PasswordChangeDTO;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserAccountWithoutAddressDto;
 import rs.ac.uns.ftn.informatika.rest.dto.UserProfileEditDTO;
 import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
@@ -354,6 +355,21 @@ public class UserAccountServiceImpl implements UserAccountService {
     public List<UserAccount> searchByUsername(String username) {
 
         return userAccountRepository.findByUsernameContainingIgnoreCase(username);
+    }
+    public UserAccountWithoutAddressDto mapUserToDto(UserAccount user) {
+        UserAccountWithoutAddressDto dto = new UserAccountWithoutAddressDto();
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setEmail(user.getEmail());
+        dto.setUsername(user.getUsername());
+        dto.setFollowersCount(user.getFollowersCount());
+        dto.setPostCount(user.getPostCount());
+        return dto;
+    }
+    public List<UserAccountWithoutAddressDto> searchUsers(String query) {
+        return userAccountRepository.findByUsernameContainingIgnoreCase(query).stream()
+                .map(this::mapUserToDto)
+                .collect(Collectors.toList());
     }
 
 

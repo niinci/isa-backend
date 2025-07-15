@@ -46,6 +46,11 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     @Query("SELECT u FROM UserAccount u WHERE u.id = :id")
     Optional<UserAccount> findByIdWithLock(@Param("id") Long id);
 
+    @Query("SELECT u FROM UserAccount u WHERE LOWER(u.email) = LOWER(:email)")
+    Optional<UserAccount> findByEmailIgnoreCase(@Param("email") String email);
+
+    List<UserAccount> findByUsernameContainingIgnoreCase(String usernamePart);
+
 
     long countByLastActivityDateAfter(LocalDateTime twentyFourHoursAgo);
 }
