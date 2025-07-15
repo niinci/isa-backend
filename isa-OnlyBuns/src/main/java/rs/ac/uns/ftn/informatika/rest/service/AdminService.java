@@ -116,8 +116,9 @@ public class AdminService {
                 .mapToInt(UserAccount::getPostCount)
                 .sum());
         report.put("totalFollowers", allUsers.stream()
-                .mapToInt(UserAccount::getFollowersCount)
+                .mapToLong(UserAccount::getFollowersCount) // mapToLong radi sa Long vrednostima
                 .sum());
+
 
         return report;
     }

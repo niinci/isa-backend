@@ -30,6 +30,9 @@ public interface InMemoryUserAccountRepository extends JpaRepository<UserAccount
     List<UserAccount> findAllSortedByEmail();
 
     UserAccount findByVerificationCode(String verificationCode);
+
+    List<UserAccount> findByUsernameContainingIgnoreCase(String username);
+
     /*private static AtomicLong counter = new AtomicLong();
     private final ConcurrentMap<Long, UserAccount> userAccounts = new ConcurrentHashMap<>();
 

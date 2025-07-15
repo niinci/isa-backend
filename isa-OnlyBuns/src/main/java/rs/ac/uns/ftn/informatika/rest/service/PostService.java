@@ -60,6 +60,10 @@ public class PostService {
     @Autowired
     private AdNotificationProducer adNotificationProducer;
 
+    @Autowired
+    private ImageService imageService;
+
+
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
     public List<Post> getAllPosts() {
@@ -170,15 +174,43 @@ public class PostService {
     }
 
 
-    public Post updatePost(Long postId, PostDTO postDTO,Long userId) {
+    public Post updatePost(Long postId, PostDTO postDTO, Long userId) {
         Post post = getPostById(postId);
+
         if (!post.getUserId().equals(userId)) {
             throw new RuntimeException("Nemaš dozvolu da izmeniš ovaj post.");
         }
+
         post.setDescription(postDTO.getDescription());
+
+        // Ako je korisnik poslao novu sliku
+        if (postDTO.getImageBase64() != null && !postDTO.getImageBase64().isEmpty()) {
+            try {
+                String imageUrl = imageService.saveImage(postDTO.getImageBase64());
+                post.setImageUrl(imageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("Greška prilikom čuvanja slike.");
+            }
+        }
+
+        // Lokacija
+        if (postDTO.getLatitude() != 0 && postDTO.getLongitude() != 0) {
+            post.setLatitude(postDTO.getLatitude());
+            post.setLongitude(postDTO.getLongitude());
+            post.setLocationAddress(postDTO.getLocationAddress());
+
+            // Ažuriranje keša lokacije
+            locationCacheManager.putLocation(
+                    post.getId(),
+                    post.getLongitude(),
+                    post.getLatitude(),
+                    post.getLocationAddress()
+            );
+        }
 
         return postRepository.save(post);
     }
+
 
     public List<Post> getAllPostsSortedByDate() {
         // Dohvati sve objave koje nisu obrisane

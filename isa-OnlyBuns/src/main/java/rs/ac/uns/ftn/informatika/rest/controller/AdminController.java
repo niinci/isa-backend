@@ -155,7 +155,7 @@ public class AdminController {
         private String lastName;
         private Role role;
         private boolean enabled;
-        private int followersCount;
+        private Long followersCount;
         private int postCount;
 
         public AdminResponse(UserAccount user) {
@@ -188,8 +188,8 @@ public class AdminController {
         public boolean isEnabled() { return enabled; }
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-        public int getFollowersCount() { return followersCount; }
-        public void setFollowersCount(int followersCount) { this.followersCount = followersCount; }
+        public Long getFollowersCount() { return followersCount; }
+        public void setFollowersCount(long followersCount) { this.followersCount = followersCount; }
 
         public int getPostCount() { return postCount; }
         public void setPostCount(int postCount) { this.postCount = postCount; }

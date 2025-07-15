@@ -34,7 +34,7 @@ public class UserAccount {
     private String address;
 
     @Column(name = "followers_count")
-    private int followersCount;
+    private Long followersCount = 0L;
 
     @Column(name = "post_count")
     private int postCount;
@@ -97,7 +97,7 @@ public class UserAccount {
 
     }
 
-    public UserAccount(Long id, String firstName, String lastName, String email, String password, String address, int followersCount,String  username) {
+    public UserAccount(Long id, String firstName, String lastName, String email, String password, String address, Long followersCount,String  username) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -178,11 +178,11 @@ public class UserAccount {
         this.address = address;
     }
 
-    public int getFollowersCount() {
+    public Long getFollowersCount() {
         return followersCount;
     }
 
-    public void setFollowersCount(int followersCount) {
+    public void setFollowersCount(long followersCount) {
         this.followersCount = followersCount;
     }
 
