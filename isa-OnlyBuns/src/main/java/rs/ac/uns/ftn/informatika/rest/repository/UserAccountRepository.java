@@ -47,7 +47,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     Optional<UserAccount> findByIdWithLock(@Param("id") Long id);
 
 
-
+    long countByLastActivityDateAfter(LocalDateTime twentyFourHoursAgo);
 }
 
 
