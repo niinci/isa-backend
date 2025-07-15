@@ -45,9 +45,20 @@ public class PostController {
     private PostLikeRepository postLikeRepository;
 
     @GetMapping
-    public List<Post> getAllPosts() {
-        return postService.getAllPosts();
+    public List<Post> getAllPosts(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            // Nije ulogovan -> vrati sve postove
+            return postService.getAllPosts();
+        }
+
+        // Ulogovan korisnik -> vrati postove koje su postavili ljudi koje on prati
+        String email = authentication.getName();
+        UserAccount user = userAccountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return postService.getPostsFromFollowedUsers(user.getId());
     }
+
 
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody PostDTO postDTO) {
