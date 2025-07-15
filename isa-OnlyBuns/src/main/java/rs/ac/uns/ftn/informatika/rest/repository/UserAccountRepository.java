@@ -52,7 +52,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     List<UserAccount> findByUsernameContainingIgnoreCase(String usernamePart);
 
 
-
+    long countByLastActivityDateAfter(LocalDateTime twentyFourHoursAgo);
 }
 
 
