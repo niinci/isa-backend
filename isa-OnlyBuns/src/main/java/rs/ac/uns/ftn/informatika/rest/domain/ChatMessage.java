@@ -9,12 +9,12 @@ public class ChatMessage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    //sadrzaj por
     @Column(columnDefinition = "TEXT")
     private String content;
-
+    //posaljilac
     private String senderUsername;
-
+    //vreme
     private LocalDateTime timestamp;
 
     @ManyToOne
