@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import rs.ac.uns.ftn.informatika.rest.domain.Comment;
 import rs.ac.uns.ftn.informatika.rest.dto.CommentDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserIdUsernameDTO;
 import rs.ac.uns.ftn.informatika.rest.service.CommentService;
 
 import java.util.List;
@@ -34,4 +35,9 @@ public class CommentController {
         commentService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
     }*/
+  @PostMapping("/usernames")
+  public ResponseEntity<List<UserIdUsernameDTO>> getUsernamesByUserIds(@RequestBody List<Long> userIds) {
+      List<UserIdUsernameDTO> usernames = commentService.getUsernamesByUserIds(userIds);
+      return ResponseEntity.ok(usernames);
+  }
 }

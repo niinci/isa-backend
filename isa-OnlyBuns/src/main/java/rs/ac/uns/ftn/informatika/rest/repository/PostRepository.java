@@ -46,6 +46,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             ") OR p.userId = :userId) AND p.deleted = false")
     List<Post> findPostsByFollowedUsers(@Param("userId") Long userId);
 
+    List<Post> findByUserIdAndDeletedFalse(Long userId);
+
 
 
 

@@ -202,4 +202,9 @@ public class PostController {
         postService.updatePostAdvertisableStatus(postId, isAdvertisable);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Post>> getPostsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(postService.getPostsByUserId(userId));
+    }
 }
