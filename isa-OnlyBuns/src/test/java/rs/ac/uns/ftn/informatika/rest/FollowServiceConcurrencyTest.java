@@ -1,13 +1,16 @@
 package rs.ac.uns.ftn.informatika.rest;
 
+import org.springframework.transaction.annotation.Transactional; // ✅ Ovo koristi
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestExecutionListeners;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
+import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.service.FollowService;
 
@@ -15,13 +18,19 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.context.TestExecutionListeners.MergeMode.MERGE_WITH_DEFAULTS;
 import static rs.ac.uns.ftn.informatika.rest.domain.Role.REGISTERED_USER;
+
+
 
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class FollowServiceConcurrencyTest {
 
     @Autowired
@@ -32,6 +41,8 @@ public class FollowServiceConcurrencyTest {
 
     @Autowired
     private UserAccountRepository userRepository;
+    @Autowired
+    private PostLikeRepository postLikeRepository;
 
     private UserAccount targetUser;
     private UserAccount[] followerUsers;
@@ -40,8 +51,9 @@ public class FollowServiceConcurrencyTest {
 
     @BeforeEach
     void setup() {
-        followRepository.deleteAll();
-        userRepository.deleteAll();
+        postLikeRepository.deleteAll();   // OBRIŠI PRVO post_likes
+        followRepository.deleteAll();     // pa follow-ove
+        userRepository.deleteAll();       // pa korisnik
 
         // Korisnik koji će biti praćen
         targetUser = new UserAccount();
