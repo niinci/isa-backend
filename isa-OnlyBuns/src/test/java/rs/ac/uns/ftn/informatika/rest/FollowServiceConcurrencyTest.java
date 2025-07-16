@@ -8,7 +8,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
-import rs.ac.uns.ftn.informatika.rest.repository.PostLikeRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.service.FollowService;
 
@@ -38,12 +37,9 @@ public class FollowServiceConcurrencyTest {
     private UserAccount[] followerUsers;
 
     private final int NUMBER_OF_THREADS = 100; //broj korisnika
-    @Autowired
-    private PostLikeRepository postLikeRepository;
 
     @BeforeEach
     void setup() {
-        postLikeRepository.deleteAll();
         followRepository.deleteAll();
         userRepository.deleteAll();
 
