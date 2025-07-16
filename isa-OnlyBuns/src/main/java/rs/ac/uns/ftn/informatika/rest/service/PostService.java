@@ -28,10 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import rs.ac.uns.ftn.informatika.rest.dto.PostDTO;
@@ -41,12 +38,17 @@ import jakarta.transaction.Transactional;
 import rs.ac.uns.ftn.informatika.rest.util.LocationCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rs.ac.uns.ftn.informatika.rest.util.TrendCacheManager;
 
 @Service
 public class PostService {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private TrendCacheManager trendCacheManager;
+
 
     @Autowired
     private UserAccountRepository userRepository;
@@ -363,4 +365,31 @@ public class PostService {
     public List<Post> getPostsByUserId(Long userId) {
         return postRepository.findByUserIdAndDeletedFalse(userId);
     }
+
+    public Map<String, Object> getTrendsCached() {
+        Map<String, Object> cached = (Map<String, Object>) trendCacheManager.get("trends");
+        if (cached != null) {
+            System.out.println("Trendovi dobijeni iz keša!");
+            return cached;
+        }
+
+        Map<String, Object> trends = new HashMap<>();
+
+        long totalPosts = getTotalPostCount();  // koristi već keširane metode
+        long postsLastMonth = getPostCountLastMonth();
+        List<Post> top5Last7Days = getTop5PostsLast7Days();
+        List<Post> top10Ever = getTop10PostsEver();
+        List<UserAccount> top10Users = getTop10UsersByLikesGivenLast7Days();
+
+        trends.put("totalPosts", totalPosts);
+        trends.put("postsLastMonth", postsLastMonth);
+        trends.put("top5PostsLast7Days", top5Last7Days);
+        trends.put("top10PostsEver", top10Ever);
+        trends.put("top10UsersByLikesGivenLast7Days", top10Users);
+
+        trendCacheManager.put("trends", trends);
+        System.out.println("Trendovi izračunati i ubačeni u keš.");
+        return trends;
+    }
+
 }
