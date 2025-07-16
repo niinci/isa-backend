@@ -75,6 +75,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/userAccount/follow/**").hasRole("USER")
                 .requestMatchers("/api/userAccount/profile/update").hasRole("USER")
                 .requestMatchers(HttpMethod.POST, "/api/comments/post/**").hasRole("USER")
+                .requestMatchers("/api/trends").hasRole("USER")
 
                 // Admin endpoints - potrebna ADMIN uloga
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

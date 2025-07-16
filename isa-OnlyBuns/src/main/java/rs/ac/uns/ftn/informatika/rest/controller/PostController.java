@@ -159,42 +159,13 @@ public class PostController {
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/trends")
     public ResponseEntity<?> getTrends() {
-        Map<String, Object> response = new HashMap<>();
-
-        // Ukupan broj objava
-        long totalPosts = postService.getAllPosts().size();
-        response.put("totalPosts", totalPosts);
-
-        // Broj objava u poslednjih mesec dana
-        long postsLastMonth = postService.getAllPosts().stream()
-                .filter(post -> post.getCreationTime().isAfter(LocalDateTime.now().minusMonths(1)))
-                .count();
-        response.put("postsLastMonth", postsLastMonth);
-
-        // Top 5 postova u poslednjih 7 dana (po broju lajkova)
-        List<Post> top5Last7Days = postService.getAllPosts().stream()
-                .filter(post -> post.getCreationTime().isAfter(LocalDateTime.now().minusDays(7)))
-                .sorted(Comparator.comparing(Post::getLikesCount).reversed())
-                .limit(5)
-                .collect(Collectors.toList());
-        response.put("top5PostsLast7Days", top5Last7Days);
-
-        // Top 10 postova ikada
-        List<Post> top10Ever = postService.getAllPosts().stream()
-                .sorted(Comparator.comparing(Post::getLikesCount).reversed())
-                .limit(10)
-                .collect(Collectors.toList());
-        response.put("top10PostsEver", top10Ever);
-
-        // Top 10 korisnika koji su dali najviše lajkova u poslednjih 7 dana
-        List<UserAccount> top10Users = postLikeRepository
-                .findTop10UsersByLikesGivenAfter(LocalDateTime.now().minusDays(7));
-        response.put("top10UsersByLikesGivenLast7Days", top10Users);
-
+        Map<String, Object> response = postService.getTrendsCached();
         return ResponseEntity.ok(response);
     }
+
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{postId}/advertisable")

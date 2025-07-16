@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,6 +16,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import rs.ac.uns.ftn.informatika.rest.config.Utility;
 import rs.ac.uns.ftn.informatika.rest.domain.AuthRequest;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
@@ -27,6 +30,7 @@ import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.InMemoryUserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
+import rs.ac.uns.ftn.informatika.rest.util.EmailBloomFilter;
 import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -49,6 +53,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     private PostRepository postRepository;
     @Autowired
     private FollowRepository followRepository;
+
+    @Autowired
+    private EmailBloomFilter emailBloomFilter;
 
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
@@ -106,25 +113,39 @@ public class UserAccountServiceImpl implements UserAccountService {
      * Metoda za registraciju korisnika - javna za sve
      */
     @Override
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public UserAccount registerUser(UserAccountDTO userAccountDTO) {
-        // Provjeri da li već postoji korisnik
-        if (userAccountRepository.findByEmail(userAccountDTO.getEmail()) != null) {
+        String email = userAccountDTO.getEmail().toLowerCase();
+
+        // OPTIMIZACIJA: Brza provera BloomFilter-a
+        if (emailBloomFilter.mightContain(email)) {
+            // Moguce je da postoji, proverava u bazi
+            if (userAccountRepository.findByEmail(email) != null) {
+                throw new RuntimeException("User already exists");
+            }
+        }
+        // Ako BloomFilter kaže da NE postoji, definitivno ne postoji
+
+        userAccountDTO.setPassword(encoder.encode(userAccountDTO.getPassword()));
+        UserAccount user = new UserAccount(userAccountDTO);
+        user.setRole(Role.REGISTERED_USER);
+        user.setEnabled(false);
+        user.setVerificationCode(RandomStringUtils.randomAlphanumeric(64));
+
+        try {
+            UserAccount savedUser = userAccountRepository.save(user);
+
+            // VAŽNO: Dodaj u BloomFilter NAKON uspešnog čuvanja
+            emailBloomFilter.addEmail(email);
+
+            return savedUser;
+        } catch (DataIntegrityViolationException e) {
+            // Hvatamo unique constraint violation
+            // NE dodajemo u BloomFilter jer registracija nije uspešna
             throw new RuntimeException("User already exists");
         }
-
-        // Enkriptuj lozinku
-        userAccountDTO.setPassword(encoder.encode(userAccountDTO.getPassword()));
-
-        UserAccount user = new UserAccount(userAccountDTO);
-        user.setRole(Role.REGISTERED_USER); // Postavlja default ulogu
-        user.setEnabled(false); // Potrebna verifikacija
-
-        // Generiši verifikacioni kod
-        String randomCode = RandomStringUtils.randomAlphanumeric(64);
-        user.setVerificationCode(randomCode);
-
-        return userAccountRepository.save(user);
     }
+
 
     /**
      * Dobijanje profila korisnika - javno za sve
