@@ -12,6 +12,7 @@ import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import org.springframework.data.domain.Pageable;
 import rs.ac.uns.ftn.informatika.rest.dto.ChatGroupDto;
 import rs.ac.uns.ftn.informatika.rest.dto.UserAccountWithoutAddressDto;
+import java.time.LocalDateTime;
 
 
 import java.util.List;
@@ -51,6 +52,7 @@ public class ChatService {
         message.setContent(dto.getContent());
         message.setSenderUsername(dto.getSenderUsername());
         message.setChatGroup(group);
+        message.setTimestamp(LocalDateTime.now());
 
         chatMessageRepository.save(message);
 
