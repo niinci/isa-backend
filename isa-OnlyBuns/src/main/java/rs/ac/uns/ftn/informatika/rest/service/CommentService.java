@@ -4,7 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rs.ac.uns.ftn.informatika.rest.domain.Comment;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
+import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 import rs.ac.uns.ftn.informatika.rest.dto.CommentDTO;
+import rs.ac.uns.ftn.informatika.rest.dto.UserIdUsernameDTO;
 import rs.ac.uns.ftn.informatika.rest.exception.ResourceNotFoundException;
 import rs.ac.uns.ftn.informatika.rest.repository.CommentRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
@@ -70,5 +72,13 @@ public class CommentService {
 
      return dto;
  }
+
+    public List<UserIdUsernameDTO> getUsernamesByUserIds(List<Long> userIds) {
+        // Primer kako možeš da dobiješ username-e iz User repository
+        List<UserAccount> users = userAccountRepository.findAllById(userIds);
+        return users.stream()
+                .map(u -> new UserIdUsernameDTO(u.getId(), u.getUsername()))
+                .collect(Collectors.toList());
+    }
 
 }

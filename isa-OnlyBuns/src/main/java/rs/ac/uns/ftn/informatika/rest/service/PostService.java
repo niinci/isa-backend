@@ -360,4 +360,7 @@ public class PostService {
         return postRepository.findPostsByFollowedUsers(userId);
     }
 
+    public List<Post> getPostsByUserId(Long userId) {
+        return postRepository.findByUserIdAndDeletedFalse(userId);
+    }
 }
