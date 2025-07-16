@@ -8,7 +8,7 @@
 /dataSources.local.xml
 
 # Maven build output
-target/
+/target/
 
 # Ignore all .jar files anywhere in the project
 *.jar

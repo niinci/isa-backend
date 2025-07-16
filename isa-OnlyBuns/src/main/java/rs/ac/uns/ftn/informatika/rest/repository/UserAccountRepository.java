@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
 
 import java.time.LocalDateTime;
@@ -34,7 +35,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     @Query("SELECT u.id FROM UserAccount u")
     List<Long> findAllUserIds();
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
+    @Transactional
     @Query("UPDATE UserAccount u SET u.followersCount = u.followersCount + 1 WHERE u.id = :userId")
     void incrementFollowersCount(@Param("userId") Long userId);
 
@@ -53,6 +55,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
 
     long countByLastActivityDateAfter(LocalDateTime twentyFourHoursAgo);
+
+
 }
 
 
