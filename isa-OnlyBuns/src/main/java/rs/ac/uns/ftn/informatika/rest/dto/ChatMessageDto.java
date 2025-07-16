@@ -1,11 +1,14 @@
 package rs.ac.uns.ftn.informatika.rest.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class ChatMessageDto {
         private Long id;
         private String content;
         private String senderUsername;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         private LocalDateTime timestamp;
         private Long chatGroupId;
 
