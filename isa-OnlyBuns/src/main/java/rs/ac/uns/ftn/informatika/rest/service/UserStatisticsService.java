@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import rs.ac.uns.ftn.informatika.rest.domain.Post;
 import rs.ac.uns.ftn.informatika.rest.domain.UserAccount;
+import rs.ac.uns.ftn.informatika.rest.repository.FollowRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
+import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,10 +17,12 @@ import java.util.List;
 public class UserStatisticsService {
 
     private final PostRepository postRepository;
+    private final FollowRepository followRepository;
 
     @Autowired
-    public UserStatisticsService(PostRepository postRepository) {
+    public UserStatisticsService(PostRepository postRepository, FollowRepository followRepository) {
         this.postRepository = postRepository;
+        this.followRepository = followRepository;
     }
 
     @Transactional
@@ -38,12 +42,16 @@ public class UserStatisticsService {
                 .filter(comment -> comment.getCommentedAt().isAfter(sevenDaysAgo))
                 .count();
 
+        // PRATIOCI:
+        long newFollowers = followRepository.countByFollowingIdAndCreatedAtAfter(user.getId(), sevenDaysAgo);
+
         StringBuilder emailContent = new StringBuilder();
         emailContent.append("Hey ").append(user.getFirstName()).append(",\n\n");
         emailContent.append("It’s been a quiet week without you around! \uD83D\uDC40 ");
         emailContent.append("Here’s what you missed over the past week while you were away:\n\n");
         emailContent.append("   - total likes on your posts: ").append(newLikesOnUserPosts).append("\n");
         emailContent.append("   - total comments on your posts: ").append(newCommentsOnUserPosts).append("\n");
+        emailContent.append("   - new followers: ").append(newFollowers).append("\n");
         emailContent.append("\nHope to see you soon,\n");
         emailContent.append("OnlyBuns Team \uD83D\uDE80");
 

@@ -202,6 +202,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         // Azuriranje lastActivityDate
         userToFollow.setLastActivityDate(LocalDateTime.now());
 
+
+
         userAccountRepository.save(userToFollow);
 
         return true;

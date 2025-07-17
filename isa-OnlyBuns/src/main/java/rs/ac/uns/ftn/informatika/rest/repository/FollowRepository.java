@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import rs.ac.uns.ftn.informatika.rest.domain.Follow;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,4 +22,5 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
     List<Follow> findByFollowerId(Long followerId);
     long countByFollowingId(Long followingId);
 
+    long countByFollowingIdAndCreatedAtAfter(Long id, LocalDateTime sevenDaysAgo);
 }

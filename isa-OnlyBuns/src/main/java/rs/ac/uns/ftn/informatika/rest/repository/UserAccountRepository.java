@@ -25,7 +25,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     // Ostali custom metodi ako su potrebni
     Optional<UserAccount> findByUsername(String username);
 
-    List<UserAccount> findByLastActivityDateBeforeAndIsEnabledTrueAndLastNotificationSentDateBeforeOrLastNotificationSentDateIsNull(LocalDateTime activityDateTime, LocalDateTime notificationDateTime);
+    List<UserAccount> findByLastActivityDateBeforeAndIsEnabledTrueAndRegistrationDateBeforeAndLastNotificationSentDateBeforeOrLastNotificationSentDateIsNull(LocalDateTime activityDateTime, LocalDateTime registrationDateTime, LocalDateTime notificationDateTime);
 
     Optional<UserAccount> findByVerificationCode(String verificationCode);
 

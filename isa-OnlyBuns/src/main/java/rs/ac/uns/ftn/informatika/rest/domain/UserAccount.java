@@ -61,6 +61,12 @@ public class UserAccount {
 
     @PrePersist
     protected void onCreate() {
+        if (this.lastActivityDate == null) {
+            this.lastActivityDate = LocalDateTime.now();
+        }
+        if (this.lastNotificationSentDate == null) {
+            this.lastNotificationSentDate = LocalDateTime.now();
+        }
         this.registrationDate = LocalDateTime.now();
     }
 
