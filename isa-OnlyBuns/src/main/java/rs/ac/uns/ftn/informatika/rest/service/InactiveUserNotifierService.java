@@ -33,14 +33,14 @@ public class InactiveUserNotifierService {
     @Scheduled(cron = "0/30 * * * * ?")
     public void notifyInactiveUsers() {
         // provjera neaktivnosti
-        LocalDateTime activityThreshold  = LocalDateTime.now().minusMinutes(5); // za testiranje
-        // LocalDateTime activityThreshold  = LocalDateTime.now().minusDays(7);
+        // LocalDateTime activityThreshold  = LocalDateTime.now().minusMinutes(5); // za testiranje
+        LocalDateTime activityThreshold  = LocalDateTime.now().minusDays(7);
 
         // period mirovanja notifikacija
-        //LocalDateTime notificationThreshold = LocalDateTime.now().minusDays(7);
-        LocalDateTime notificationThreshold = LocalDateTime.now().minusMinutes(10); // za testiranje
+        LocalDateTime notificationThreshold = LocalDateTime.now().minusDays(7);
+        //LocalDateTime notificationThreshold = LocalDateTime.now().minusMinutes(10); // za testiranje
 
-        LocalDateTime registrationConsiderationThreshold = LocalDateTime.now().minusMinutes(1);
+        LocalDateTime registrationConsiderationThreshold = LocalDateTime.now().minusDays(7);
 
         List<UserAccount> inactiveUsers = userAccountRepository.findByLastActivityDateBeforeAndIsEnabledTrueAndRegistrationDateBeforeAndLastNotificationSentDateBeforeOrLastNotificationSentDateIsNull(
                 activityThreshold, registrationConsiderationThreshold, notificationThreshold);
