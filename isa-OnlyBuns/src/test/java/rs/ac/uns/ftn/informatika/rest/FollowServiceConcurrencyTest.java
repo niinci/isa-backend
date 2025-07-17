@@ -28,7 +28,7 @@ import static rs.ac.uns.ftn.informatika.rest.domain.Role.REGISTERED_USER;
 
 
 
-@SpringBootTest
+@SpringBootTest(classes = OnlyBansApplication.class)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class FollowServiceConcurrencyTest {
