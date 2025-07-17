@@ -1,6 +1,7 @@
 package rs.ac.uns.ftn.informatika.rest.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment; // Dodato
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
+@CrossOrigin(origins = "*") // Dodato za CORS podršku
 @RequestMapping("/api/posts")
 public class PostController {
 
@@ -44,8 +46,19 @@ public class PostController {
     @Autowired
     private PostLikeRepository postLikeRepository;
 
+    @Autowired
+    private Environment environment; // Dodato za pristup portu aplikacije
+
+    // Pomoćna metoda za logovanje porta
+    private void logRequestPort(String endpoint) {
+        String port = environment.getProperty("local.server.port");
+        System.out.println(">>> Request for " + endpoint + " received on OnlyBans instance running on port: " + port);
+    }
+
+
     @GetMapping
     public List<Post> getAllPosts(Authentication authentication) {
+        logRequestPort("/api/posts - GET (all)"); // Dodato logovanje
         if (authentication == null || !authentication.isAuthenticated()) {
             // Nije ulogovan -> vrati sve postove
             return postService.getAllPosts();
@@ -62,6 +75,7 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<Post> createPost(@RequestBody PostDTO postDTO) {
+        logRequestPort("/api/posts - POST"); // Dodato logovanje
         try {
             String imageUrl = imageService.saveImage(postDTO.getImageBase64());
             if (imageUrl != null) {
@@ -77,6 +91,7 @@ public class PostController {
     @PreAuthorize("hasRole('USER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id, Authentication authentication) {
+        logRequestPort("/api/posts/" + id + " - DELETE"); // Dodato logovanje
         String email = authentication.getName();
         UserAccount user = userAccountRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -87,6 +102,7 @@ public class PostController {
     @PreAuthorize("hasRole('USER')")
     @PutMapping("/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody PostDTO postDTO, Authentication authentication) {
+        logRequestPort("/api/posts/" + id + " - PUT"); // Dodato logovanje
         String email = authentication.getName();
         UserAccount user = userAccountRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -96,12 +112,14 @@ public class PostController {
 
     @GetMapping("/sorted")
     public List<Post> getAllPostsSortedByDate() {
+        logRequestPort("/api/posts/sorted - GET"); // Dodato logovanje
         return postService.getAllPostsSortedByDate();
     }
 
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/{id}/like")
     public ResponseEntity<?> Like(@PathVariable Long id, Authentication authentication) {
+        logRequestPort("/api/posts/" + id + "/like - POST"); // Dodato logovanje
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -119,6 +137,7 @@ public class PostController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/liked")
     public List<Post> getLikedPosts(Authentication authentication) {
+        logRequestPort("/api/posts/liked - GET"); // Dodato logovanje
         String email = authentication.getName();
         UserAccount user = userAccountRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -133,6 +152,7 @@ public class PostController {
             @RequestParam double longitude,
             @RequestParam(defaultValue = "5.0") double radiusKm
     ) {
+        logRequestPort("/api/posts/nearby - GET"); // Dodato logovanje
         String userEmail = authentication.getName();  // Email ulogovanog korisnika
         Optional<UserAccount> optionalUser = userAccountRepository.findByEmail(userEmail);
 
@@ -162,6 +182,7 @@ public class PostController {
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/trends")
     public ResponseEntity<?> getTrends() {
+        logRequestPort("/api/posts/trends - GET"); // Dodato logovanje
         Map<String, Object> response = postService.getTrendsCached();
         return ResponseEntity.ok(response);
     }
@@ -170,12 +191,14 @@ public class PostController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{postId}/advertisable")
     public ResponseEntity<Void> updatePostAdvertisableStatus(@PathVariable Long postId, @RequestBody boolean isAdvertisable) {
+        logRequestPort("/api/posts/" + postId + "/advertisable - PUT"); // Dodato logovanje
         postService.updatePostAdvertisableStatus(postId, isAdvertisable);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Post>> getPostsByUser(@PathVariable Long userId) {
+        logRequestPort("/api/posts/user/" + userId + " - GET"); // Dodato logovanje
         return ResponseEntity.ok(postService.getPostsByUserId(userId));
     }
 }

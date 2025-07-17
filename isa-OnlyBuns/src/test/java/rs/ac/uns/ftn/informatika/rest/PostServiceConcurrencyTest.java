@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static rs.ac.uns.ftn.informatika.rest.domain.Role.REGISTERED_USER;
 
-@SpringBootTest
+@SpringBootTest(classes = OnlyBansApplication.class)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD) // Resetuje Spring kontekst pre svakog testa
 public class PostServiceConcurrencyTest {
