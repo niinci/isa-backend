@@ -109,9 +109,12 @@ public class RateLimiterService {
             if ("POST".equalsIgnoreCase(httpMethod)) {
                 actionType = "COMMENT_POST";
             }
-      //  } else if (uri.matches("/api/follows/follow(\\?.*)?$")) {
-      //      actionType = "FOLLOW_USER";
-        } else if (uri.equals("/api/userAccount/login")) {
+        }
+        // Samo POST zahtevi za /api/follows/follow* se tretiraju kao "FOLLOW_USER" za rate limit
+        else if (uri.matches("/api/follows/follow.*") && "POST".equalsIgnoreCase(httpMethod)) {
+            actionType = "FOLLOW_USER";
+        }
+        else if (uri.equals("/api/userAccount/login")) {
             actionType = "LOGIN_ATTEMPT";
         } else if (uri.matches("/api/posts/\\d+/like")) {
             actionType = "LIKE_POST";
@@ -129,20 +132,16 @@ public class RateLimiterService {
             long nowMillis = System.currentTimeMillis();
 
             if (nowMillis > windowStartMillis + timeWindowMillis) {
-                System.out.println("UserRequestTracker[" + key + "]: Window expired. Resetting count. Old window started at: " + LocalDateTime.ofInstant(Instant.ofEpochMilli(windowStartMillis), ZoneId.systemDefault()) + ", now: " + LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), ZoneId.systemDefault()));
+                System.out.println("UserRequestTracker[" + key + "]: Window EXPIRED. Resetting count from " + requestCount + " to 0. Old window started at: " + LocalDateTime.ofInstant(Instant.ofEpochMilli(windowStartMillis), ZoneId.systemDefault()) + ", New window starts now: " + LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), ZoneId.systemDefault()) + ".");
                 requestCount = 0;
                 windowStartMillis = nowMillis;
             }
 
-            System.out.println("UserRequestTracker[" + key + "]: Current count: " + requestCount + ", Limit: " + limit);
-
-            if (requestCount >= limit) {
-                System.out.println("UserRequestTracker[" + key + "]: LIMIT EXCEEDED! (" + requestCount + " >= " + limit + "). Remaining time in window: " + (windowStartMillis + timeWindowMillis - nowMillis) + "ms");
-                return false;
+            if (requestCount >= limit) {return false;
             }
 
             requestCount++;
-            System.out.println("UserRequestTracker[" + key + "]: Request allowed. New count: " + requestCount + ", Limit: " + limit);
+
             return true;
         }
     }
@@ -155,6 +154,5 @@ public class RateLimiterService {
             UserRequestTracker tracker = entry.getValue();
             return tracker.requestCount == 0 && (System.currentTimeMillis() - tracker.windowStartMillis) > TimeUnit.HOURS.toMillis(1);
         });
-        System.out.println("RateLimiterService: Cleanup performed. Current trackers count: " + requestTrackers.size());
     }
 }
