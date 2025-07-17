@@ -6,6 +6,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 // Dodajte ove import-e za Logger, ako želite profesionalnije logovanje
  import org.slf4j.Logger;
@@ -27,15 +28,15 @@ public class LoadBalancerController {
 
     // currentIndex treba da bude AtomicInteger ili slično u višethreadnom okruženju,
     // ali za ovaj jednostavan round-robin sa synchronized metodom je OK.
-    private int currentIndex = 0;
+    private AtomicInteger currentIndex = new AtomicInteger(0);
 
     private final RestTemplate restTemplate = new RestTemplate();
 
     private synchronized String getNextInstanceAvailable() {
         int attempts = 0;
         while (attempts < instances.size()) {
-            String instance = instances.get(currentIndex);
-            currentIndex = (currentIndex + 1) % instances.size();
+            int index = currentIndex.getAndUpdate(i -> (i + 1) % instances.size());
+            String instance = instances.get(index);
 
             // Provera dostupnosti instance
             try {
@@ -69,8 +70,8 @@ public class LoadBalancerController {
             int checked = 0;
 
             while (checked < totalInstances) {
-                instance = instances.get(currentIndex);
-                currentIndex = (currentIndex + 1) % totalInstances;
+                int index = currentIndex.getAndUpdate(i -> (i + 1) % instances.size());
+                 instance = instances.get(index);
 
                 // Provera dostupnosti instance pozivom na /actuator/health
                 try {
