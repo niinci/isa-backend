@@ -8,7 +8,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.Iterator;
 
 @Service
 public class RateLimiterService {
@@ -16,6 +18,7 @@ public class RateLimiterService {
     private final ConcurrentMap<String, UserRequestTracker> requestTrackers = new ConcurrentHashMap<>();
 
     private static final int COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE = 5;
+    private static final int COMMENT_REGISTERED_USER_LIMIT_PER_HOUR = 60;
     private static final int COMMENT_UNAUTHENTICATED_LIMIT_PER_MINUTE = 0; // Neautentifikovani ne mogu komentarisati
 
     private static final int FOLLOW_REGISTERED_USER_LIMIT_PER_MINUTE = 50;
@@ -26,6 +29,10 @@ public class RateLimiterService {
     private static final int DEFAULT_UNAUTHENTICATED_LIMIT_PER_MINUTE = 60;
     private static final int DEFAULT_REGISTERED_USER_LIMIT_PER_MINUTE = 300;
     private static final int DEFAULT_ADMIN_LIMIT_PER_MINUTE = 1000;
+
+    private static final long ONE_MINUTE_MILLIS = TimeUnit.MINUTES.toMillis(1);
+    private static final long ONE_HOUR_MILLIS = 60 * 60 * 1000;
+    private static final long GRACE_PERIOD_CLEANUP_MILLIS = TimeUnit.HOURS.toMillis(2); // Keep trackers for 2 hours if empty before cleaning up
 
 
     public boolean isRequestAllowed(String identifier, Role role, String requestUri, String httpMethod) {
@@ -38,21 +45,42 @@ public class RateLimiterService {
         UserRequestTracker tracker = requestTrackers.computeIfAbsent(key,
                 k -> new UserRequestTracker());
 
-        int limit = getLimitForActionAndRole(actionType, role);
-        long timeWindowMillis = getTimeWindowForActionType(actionType);
+        // Specifična logika za komentare koji imaju dva vremenska limita
+        if ("COMMENT_POST".equals(actionType) && role == Role.REGISTERED_USER) {
+            System.out.println("RateLimiterService: Checking COMMENT_POST request (two limits):");
+            System.out.println("  Identifier: " + identifier);
+            System.out.println("  Role: " + role);
+            System.out.println("  Effective Key: " + key);
+            System.out.println("  Minute Limit: " + COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE);
+            System.out.println("  Hour Limit: " + COMMENT_REGISTERED_USER_LIMIT_PER_HOUR);
 
-        System.out.println("RateLimiterService: Checking request:");
-        System.out.println("  Identifier: " + identifier);
-        System.out.println("  Role: " + role);
-        System.out.println("  Request URI: " + requestUri);
-        System.out.println("  HTTP Method: " + httpMethod);
-        System.out.println("  Determined Action Type: " + actionType);
-        System.out.println("  Effective Key: " + key);
-        System.out.println("  Calculated Limit: " + limit);
-        System.out.println("  Time Window (ms): " + timeWindowMillis);
+            return tracker.isRequestAllowed(
+                    COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE, ONE_MINUTE_MILLIS,
+                    COMMENT_REGISTERED_USER_LIMIT_PER_HOUR, ONE_HOUR_MILLIS,
+                    key
+            );
+        } else {
+            // Postojeća logika za sve ostale akcije koje imaju samo jedan limit (po minuti)
+            int limit = getLimitForActionAndRole(actionType, role);
+            long timeWindowMillis = getTimeWindowForActionType(actionType);
 
+            System.out.println("RateLimiterService: Checking DEFAULT request:");
+            System.out.println("  Identifier: " + identifier);
+            System.out.println("  Role: " + role);
+            System.out.println("  Request URI: " + requestUri);
+            System.out.println("  HTTP Method: " + httpMethod);
+            System.out.println("  Determined Action Type: " + actionType);
+            System.out.println("  Effective Key: " + key);
+            System.out.println("  Calculated Limit: " + limit);
+            System.out.println("  Time Window (ms): " + timeWindowMillis);
 
-        return tracker.isRequestAllowed(limit, timeWindowMillis, key);
+            // Za akcije koje nemaju satni limit, prosleđujemo vrlo visok limit i dug prozor
+            return tracker.isRequestAllowed(
+                    limit, timeWindowMillis,
+                    Integer.MAX_VALUE, TimeUnit.DAYS.toMillis(365), // Efektivno nema satnog limita
+                    key
+            );
+        }
     }
 
     private int getLimitForActionAndRole(String actionType, Role role) {
@@ -125,34 +153,72 @@ public class RateLimiterService {
     }
 
     private static class UserRequestTracker {
-        private int requestCount = 0;
-        private long windowStartMillis = System.currentTimeMillis();
+        // Skladišti timestamp-ove (u milisekundama) svakog zahteva
+        private final ConcurrentLinkedQueue<Long> requestTimestamps = new ConcurrentLinkedQueue<>();
+        private long lastActivityTimestamp = System.currentTimeMillis(); // prati poslednju aktivnost za cleanup
 
-        public synchronized boolean isRequestAllowed(int limit, long timeWindowMillis, String key) {
+        // Metoda sada prima oba limita i vremenska prozora
+        public synchronized boolean isRequestAllowed(
+                int limitPerMinute, long timeWindowMinuteMillis,
+                int limitPerHour, long timeWindowHourMillis,
+                String key) {
+
             long nowMillis = System.currentTimeMillis();
+            this.lastActivityTimestamp = nowMillis; // Ažuriraj vreme poslednje aktivnosti
 
-            if (nowMillis > windowStartMillis + timeWindowMillis) {
-                System.out.println("UserRequestTracker[" + key + "]: Window EXPIRED. Resetting count from " + requestCount + " to 0. Old window started at: " + LocalDateTime.ofInstant(Instant.ofEpochMilli(windowStartMillis), ZoneId.systemDefault()) + ", New window starts now: " + LocalDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), ZoneId.systemDefault()) + ".");
-                requestCount = 0;
-                windowStartMillis = nowMillis;
+            // 1. Očistite stare unose iz queue-a (starije od najdužeg prozora, tj. 1 sat)
+            Iterator<Long> iterator = requestTimestamps.iterator();
+            while (iterator.hasNext()) {
+                Long timestamp = iterator.next();
+                if (nowMillis - timestamp > timeWindowHourMillis) { // Ukloni sve što je starije od sat vremena
+                    iterator.remove();
+                } else {
+                    // Pošto su timestamp-ovi dodati sekvencijalno,
+                    // čim naiđemo na onaj koji nije stariji od 1 sata,
+                    // znamo da ni sledeći neće biti, pa možemo prekinuti.
+                    break;
+                }
             }
 
-            if (requestCount >= limit) {return false;
+            // 2. Prebrojte zahteve za svaki prozor
+            int countInLastMinute = 0;
+            for (Long timestamp : requestTimestamps) {
+                if (nowMillis - timestamp <= timeWindowMinuteMillis) {
+                    countInLastMinute++;
+                }
+            }
+            // requestTimestamps.size() je već broj u poslednjem satu nakon čišćenja
+            int countInLastHour = requestTimestamps.size();
+
+            System.out.println("UserRequestTracker[" + key + "]: Trenutni zahtevi -> Minut: " + countInLastMinute + "/" + limitPerMinute + ", Sat: " + countInLastHour + "/" + limitPerHour);
+
+            // 3. Proverite limite
+            if (countInLastMinute >= limitPerMinute) {
+                System.out.println("UserRequestTracker[" + key + "]: Prekoračen limit za minutni prozor.");
+                return false;
             }
 
-            requestCount++;
+            if (countInLastHour >= limitPerHour) {
+                System.out.println("UserRequestTracker[" + key + "]: Prekoračen limit za satni prozor.");
+                return false;
+            }
 
+            // 4. Dodajte trenutni zahtev i dozvolite
+            requestTimestamps.add(nowMillis);
+            System.out.println("UserRequestTracker[" + key + "]: Zahtev DOZVOLJEN.");
             return true;
         }
     }
 
-    @Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = ONE_HOUR_MILLIS) // Pokreće se svakih sat vremena
     public void cleanupOldEntries() {
-        long cutoffMillis = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2);
-
+        long now = System.currentTimeMillis();
         requestTrackers.entrySet().removeIf(entry -> {
             UserRequestTracker tracker = entry.getValue();
-            return tracker.requestCount == 0 && (System.currentTimeMillis() - tracker.windowStartMillis) > TimeUnit.HOURS.toMillis(1);
+            // Ukloni trackere ako je njihov red prazan I nisu bili aktivni duže od definisanog grace perioda
+            return tracker.requestTimestamps.isEmpty() &&
+                    (now - tracker.lastActivityTimestamp > GRACE_PERIOD_CLEANUP_MILLIS);
         });
+        System.out.println("RateLimiterService: Očišćeni stari unosi. Preostali trackeri: " + requestTrackers.size());
     }
 }
