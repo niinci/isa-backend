@@ -1,4 +1,4 @@
-package rs.ac.uns.ftn.informatika.rest.service.queue;
+/*package rs.ac.uns.ftn.informatika.rest.service.queue;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,3 +28,4 @@ public class QueueClient {
         }
     }
 }
+*/

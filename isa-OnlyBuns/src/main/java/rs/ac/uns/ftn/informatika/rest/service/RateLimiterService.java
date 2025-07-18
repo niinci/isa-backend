@@ -59,10 +59,10 @@ public class RateLimiterService {
         int limit;
         switch (actionType) {
             case "COMMENT_POST":
-                limit = (role == Role.REGISTERED_USER) ? COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE : COMMENT_UNAUTHENTICATED_LIMIT_PER_MINUTE;
+                limit = (role == Role.REGISTERED_USER || role == Role.ADMIN) ? COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE : COMMENT_UNAUTHENTICATED_LIMIT_PER_MINUTE;
                 break;
             case "FOLLOW_USER":
-                limit = (role == Role.REGISTERED_USER) ? FOLLOW_REGISTERED_USER_LIMIT_PER_MINUTE : FOLLOW_UNAUTHENTICATED_LIMIT_PER_MINUTE;
+                limit = (role == Role.REGISTERED_USER || role == Role.ADMIN) ? FOLLOW_REGISTERED_USER_LIMIT_PER_MINUTE : FOLLOW_UNAUTHENTICATED_LIMIT_PER_MINUTE;
                 break;
             case "LOGIN_ATTEMPT":
                 limit = LOGIN_ATTEMPT_IP_LIMIT_PER_MINUTE;
