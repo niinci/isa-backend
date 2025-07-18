@@ -62,5 +62,5 @@ public interface InMemoryUserAccountRepository extends JpaRepository<UserAccount
         return userAccount;
     }*/
 
-
+    UserAccount findByUsername(String username);
 }

@@ -32,6 +32,7 @@ import rs.ac.uns.ftn.informatika.rest.repository.PostRepository;
 import rs.ac.uns.ftn.informatika.rest.repository.UserAccountRepository;
 import rs.ac.uns.ftn.informatika.rest.util.EmailBloomFilter;
 import rs.ac.uns.ftn.informatika.rest.util.RoleUtils;
+import rs.ac.uns.ftn.informatika.rest.util.UsernameBloomFilter;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
@@ -57,6 +58,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Autowired
     private EmailBloomFilter emailBloomFilter;
 
+    @Autowired
+    private UsernameBloomFilter usernameBloomFilter;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
@@ -113,18 +116,20 @@ public class UserAccountServiceImpl implements UserAccountService {
      * Metoda za registraciju korisnika - javna za sve
      */
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public UserAccount registerUser(UserAccountDTO userAccountDTO) {
-        String email = userAccountDTO.getEmail().toLowerCase();
+        String username = userAccountDTO.getUsername().toLowerCase().trim();
+        String email = userAccountDTO.getEmail().toLowerCase().trim();
 
-        // OPTIMIZACIJA: Brza provera BloomFilter-a
-        if (emailBloomFilter.mightContain(email)) {
-            // Moguce je da postoji, proverava u bazi
-            if (userAccountRepository.findByEmail(email) != null) {
-                throw new RuntimeException("User already exists");
-            }
+        // Proveravamo username u bazi podataka (ne oslanjamo se samo na BloomFilter)
+        if (userAccountRepository.findByUsername(username) != null) {
+            throw new RuntimeException("Username already exists");
         }
-        // Ako BloomFilter kaže da NE postoji, definitivno ne postoji
+
+        // Proveravamo email
+        if (userAccountRepository.findByEmail(email) != null) {
+            throw new RuntimeException("Email already exists");
+        }
 
         userAccountDTO.setPassword(encoder.encode(userAccountDTO.getPassword()));
         UserAccount user = new UserAccount(userAccountDTO);
@@ -135,17 +140,25 @@ public class UserAccountServiceImpl implements UserAccountService {
         try {
             UserAccount savedUser = userAccountRepository.save(user);
 
-            // VAŽNO: Dodaj u BloomFilter NAKON uspešnog čuvanja
-            emailBloomFilter.addEmail(email);
+            // Dodaj u BloomFilter NAKON uspešnog čuvanja
+            usernameBloomFilter.addUsername(username);
+            emailBloomFilter.addEmail(email); // Dodaj i email u BloomFilter ako imaš
 
             return savedUser;
         } catch (DataIntegrityViolationException e) {
             // Hvatamo unique constraint violation
-            // NE dodajemo u BloomFilter jer registracija nije uspešna
-            throw new RuntimeException("User already exists");
-        }
-    }
-
+            // Proveravamo koji constraint je narušen na osnovu poruke
+            if (e.getMessage().contains("username") ||
+                    e.getMessage().contains("USER_NAME") ||
+                    e.getMessage().contains("user_name")) {
+                throw new RuntimeException("Username already exists");
+            } else if (e.getMessage().contains("email") ||
+                    e.getMessage().contains("EMAIL")) {
+                throw new RuntimeException("Email already exists");
+            } else {
+                throw new RuntimeException("User already exists");
+            }
+        }}
 
     /**
      * Dobijanje profila korisnika - javno za sve
