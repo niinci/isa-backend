@@ -177,8 +177,21 @@ public class PostService {
     @Transactional
     public void deletePost(Long postId, Long userId) {
         Post post = getPostById(postId);
+
         if (!post.getUserId().equals(userId)) {
             throw new RuntimeException("Nemaš dozvolu da obrišeš ovaj post.");
+        }
+
+        if (!post.isDeleted()) {
+            // Post nije već obrisan, znači treba da ažuriramo postCount
+            Optional<UserAccount> userOpt = userRepository.findById(userId);
+            if (userOpt.isPresent()) {
+                UserAccount user = userOpt.get();
+                if (user.getPostCount() > 0) {
+                    user.setPostCount(user.getPostCount() - 1);
+                    userRepository.save(user);
+                }
+            }
         }
 
         post.setDeleted(true);
@@ -186,6 +199,7 @@ public class PostService {
 
         commentRepository.deleteAll(commentRepository.findByPostId(postId));
     }
+
 
 
     public Post updatePost(Long postId, PostDTO postDTO, Long userId) {

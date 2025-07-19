@@ -35,6 +35,9 @@ public class FollowService {
 
     @Transactional
     public Follow follow(Long followerId, Long followingId) {
+        if (followerId == null || followingId == null) {
+            throw new IllegalArgumentException("FollowerId i FollowingId ne smeju biti null!");
+        }
         // Zaključaj korisnika koji se prati
         userAccountRepository.findByIdWithLock(followingId)
                 .orElseThrow(() -> new RuntimeException("User not found"));

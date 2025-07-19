@@ -15,16 +15,22 @@ import java.util.concurrent.atomic.AtomicLong;
 public interface InMemoryUserAccountRepository extends JpaRepository<UserAccount, Long> {
 
     UserAccount findByEmail(String email);
-    List<UserAccount> findByFirstNameContaining(String firstName);
+    List<UserAccount> findByFirstNameContainingIgnoreCase(String firstName);
 
-    List<UserAccount> findByLastNameContaining(String lastName);
+    List<UserAccount> findByLastNameContainingIgnoreCase(String lastName);
 
-    List<UserAccount> findByEmailContaining(String email);
+    List<UserAccount> findByEmailContainingIgnoreCase(String email);
 
     List<UserAccount> findByPostCountBetween(int minPosts, int maxPosts);
 
-    @Query("SELECT u FROM UserAccount u ORDER BY u.followersCount ASC")
-    List<UserAccount> findAllSortedByFollowingCount();
+    @Query("""
+    SELECT u FROM UserAccount u
+    LEFT JOIN Follow f ON u.id = f.followerId
+    GROUP BY u.id
+    ORDER BY COUNT(f) DESC
+    """)
+    List<UserAccount> findAllSortedByFollowingCountDesc();
+
 
     @Query("SELECT u FROM UserAccount u ORDER BY u.email ASC")
     List<UserAccount> findAllSortedByEmail();

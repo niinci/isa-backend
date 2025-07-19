@@ -38,7 +38,7 @@ public class AdminService {
         admin.setLastName(lastName);
         admin.setRole(Role.ADMIN);
         admin.setEnabled(true);
-        admin.setFollowersCount(0);
+        admin.setFollowersCount(0L);
         admin.setPostCount(0);
 
         return userAccountRepository.save(admin);

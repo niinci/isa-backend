@@ -56,6 +56,17 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     long countByLastActivityDateAfter(LocalDateTime twentyFourHoursAgo);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserAccount u SET u.postCount = u.postCount + 1 WHERE u.id = :userId")
+    void incrementPostCount(@Param("userId") Long userId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserAccount u SET u.postCount = u.postCount - 1 WHERE u.id = :userId AND u.postCount > 0")
+    void decrementPostCount(@Param("userId") Long userId);
+
+
 
 }
 

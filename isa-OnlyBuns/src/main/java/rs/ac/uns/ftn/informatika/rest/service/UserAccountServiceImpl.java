@@ -298,17 +298,17 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public List<UserAccount> searchByFirstName(String firstName) {
-        return userAccountRepository.findByFirstNameContaining(firstName);
+        return userAccountRepository.findByFirstNameContainingIgnoreCase(firstName);
     }
 
     @Override
     public List<UserAccount> searchByLastName(String lastName) {
-        return userAccountRepository.findByLastNameContaining(lastName);
+        return userAccountRepository.findByLastNameContainingIgnoreCase(lastName);
     }
 
     @Override
     public List<UserAccount> searchByEmail(String email) {
-        return userAccountRepository.findByEmailContaining(email);
+        return userAccountRepository.findByEmailContainingIgnoreCase(email);
     }
 
     @Override
@@ -318,7 +318,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public List<UserAccount> sortByFollowingCount() {
-        return userAccountRepository.findAllSortedByFollowingCount();
+        return userAccountRepository.findAllSortedByFollowingCountDesc();
     }
 
     @Override
