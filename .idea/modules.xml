@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/isa-backend.iml" filepath="$PROJECT_DIR$/.idea/isa-backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/loadBalancer/loadBalancer.iml" filepath="$PROJECT_DIR$/loadBalancer/loadBalancer.iml" />
     </modules>
   </component>
 </project>
