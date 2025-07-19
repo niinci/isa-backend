@@ -36,7 +36,7 @@ public class AdNotificationDTO implements Serializable {
         return "AdNotificationDTO{" +
                 "postId=" + postId +
                 ", postDescription='" + postDescription + '\'' +
-                ", username='" + username + '\'' + // Ažurirano
+                ", username='" + username + '\'' +
                 ", notificationTime=" + notificationTime +
                 '}';
     }

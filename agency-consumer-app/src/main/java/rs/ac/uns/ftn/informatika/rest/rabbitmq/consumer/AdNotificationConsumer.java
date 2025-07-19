@@ -7,9 +7,7 @@ import rs.ac.uns.ftn.informatika.rest.dto.AdNotificationDTO;
 @Component
 public class AdNotificationConsumer {
 
-    // Listener mora da sluša na BEAN-u 'queue' (koji je AnonymousQueue)
-    // I mora da prima AdNotificationDTO, a ne String!
-    @RabbitListener(queues = "#{queue.name}")  // OVO JE ISPRAVNA KONFIGURACIJA ZA VAŠ SLUČAJ
+    @RabbitListener(queues = "#{queue.name}")
     public void receiveAdNotification(AdNotificationDTO adNotification) {
         try {
             System.out.println("Received ad notification: " + adNotification);
