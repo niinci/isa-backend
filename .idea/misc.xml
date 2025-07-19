@@ -6,6 +6,7 @@
       <list>
         <option value="$PROJECT_DIR$/isa-OnlyBuns/pom.xml" />
         <option value="$PROJECT_DIR$/LoadBalancerService/pom.xml" />
+        <option value="$PROJECT_DIR$/loadBalancer/pom.xml" />
       </list>
     </option>
   </component>
