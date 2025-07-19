@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
+    //prikaz svih postova
     List<Post> findAllByDeletedFalse();
     Post findByImageUrl(String imageUrl);
     List<Post> findByUserId(Long id);
