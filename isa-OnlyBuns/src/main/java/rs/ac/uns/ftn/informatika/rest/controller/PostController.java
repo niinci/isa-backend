@@ -201,4 +201,12 @@ public class PostController {
         logRequestPort("/api/posts/user/" + userId + " - GET"); // Dodato logovanje
         return ResponseEntity.ok(postService.getPostsByUserId(userId));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/all")
+    public ResponseEntity<List<Post>> getAllPostsFromAllUsers() {
+        logRequestPort("/api/posts/all - GET"); // Dodato logovanje
+        return ResponseEntity.ok(postService.getAllPosts());
+    }
+
 }
