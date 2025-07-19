@@ -33,7 +33,7 @@ public class UserAccount {
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "followers_count")
+    @Column(name = "followers_count", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
     private Long followersCount = 0L;
 
     @Column(name = "post_count")
@@ -95,7 +95,7 @@ public class UserAccount {
         this.lastName = userAccountDTO.getLastName();
         this.email = userAccountDTO.getEmail();
         this.password = userAccountDTO.getPassword();
-        this.followersCount = userAccountDTO.getFollowersCount();
+        this.followersCount = userAccountDTO.getFollowersCount() != null ? userAccountDTO.getFollowersCount() : 0L;
         this.postCount = userAccountDTO.getPostCount();
         this.role = Role.REGISTERED_USER;
         this.username = userAccountDTO.getUsername();
@@ -110,7 +110,7 @@ public class UserAccount {
         this.email = email;
         this.password = password;
         this.address = address;
-        this.followersCount = followersCount;
+        this.followersCount = followersCount != null ? followersCount : 0L;
         this.postCount = postCount;
         this.role = Role.REGISTERED_USER;
         this.username = username;
