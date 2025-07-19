@@ -1,4 +1,4 @@
-package rs.ac.uns.ftn.informatika.rest.rabbitmq.consumer;
+/*package rs.ac.uns.ftn.informatika.rest.rabbitmq.consumer;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
@@ -19,4 +19,4 @@ public class AdNotificationConsumer {
         System.out.println("Time: " + adNotification.getNotificationTime());
         System.out.println("------------------------------------");
     }
-}
+}*/
