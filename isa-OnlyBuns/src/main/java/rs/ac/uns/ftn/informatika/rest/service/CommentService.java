@@ -47,13 +47,12 @@ public class CommentService {
 
     }
 
-
-    /*   public void deleteComment(Long commentId) {
+    public void deleteComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + commentId));
 
         commentRepository.delete(comment);
-    }*/
+    }
  private CommentDTO mapToDTO(Comment comment) {
      CommentDTO dto = new CommentDTO();
      dto.setId(comment.getId());
