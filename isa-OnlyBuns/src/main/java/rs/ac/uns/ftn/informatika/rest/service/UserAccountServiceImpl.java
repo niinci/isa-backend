@@ -121,7 +121,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         String username = userAccountDTO.getUsername().toLowerCase().trim();
         String email = userAccountDTO.getEmail().toLowerCase().trim();
 
-        // Proveravamo username u bazi podataka (ne oslanjamo se samo na BloomFilter)
+        // Proveravamo username u bazi podataka
         if (userAccountRepository.findByUsername(username) != null) {
             throw new RuntimeException("Username already exists");
         }
@@ -140,14 +140,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         try {
             UserAccount savedUser = userAccountRepository.save(user);
 
-            // Dodaj u BloomFilter NAKON uspešnog čuvanja
             usernameBloomFilter.addUsername(username);
-            emailBloomFilter.addEmail(email); // Dodaj i email u BloomFilter ako imaš
+            emailBloomFilter.addEmail(email);
 
             return savedUser;
         } catch (DataIntegrityViolationException e) {
-            // Hvatamo unique constraint violation
-            // Proveravamo koji constraint je narušen na osnovu poruke
             if (e.getMessage().contains("username") ||
                     e.getMessage().contains("USER_NAME") ||
                     e.getMessage().contains("user_name")) {
@@ -406,6 +403,43 @@ public class UserAccountServiceImpl implements UserAccountService {
         return userAccountRepository.findByUsernameContainingIgnoreCase(query).stream()
                 .map(this::mapUserToDto)
                 .collect(Collectors.toList());
+    }
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public UserAccount registerAdmin(UserAccountDTO userAccountDTO) throws Exception {
+        String username = userAccountDTO.getUsername().toLowerCase().trim();
+        String email = userAccountDTO.getEmail().toLowerCase().trim();
+
+        if (userAccountRepository.findByUsername(username) != null) {
+            throw new Exception("Username already exists");
+        }
+        if (userAccountRepository.findByEmail(email) != null) {
+            throw new Exception("Email already exists");
+        }
+
+        userAccountDTO.setPassword(encoder.encode(userAccountDTO.getPassword()));
+        UserAccount user = new UserAccount(userAccountDTO);
+        user.setRole(Role.ADMIN);
+        user.setEnabled(true);
+        user.setVerificationCode(null);
+
+        try {
+            UserAccount savedUser = userAccountRepository.save(user);
+            usernameBloomFilter.addUsername(username);
+            emailBloomFilter.addEmail(email);
+            return savedUser;
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMessage().contains("username") ||
+                    e.getMessage().contains("USER_NAME") ||
+                    e.getMessage().contains("user_name")) {
+                throw new Exception("Username already exists");
+            } else if (e.getMessage().contains("email") ||
+                    e.getMessage().contains("EMAIL")) {
+                throw new Exception("Email already exists");
+            } else {
+                throw new Exception("User already exists");
+            }
+        }
     }
 
 

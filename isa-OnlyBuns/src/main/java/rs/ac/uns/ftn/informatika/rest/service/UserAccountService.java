@@ -67,4 +67,7 @@ public interface UserAccountService {
     boolean changePassword(String userEmail, PasswordChangeDTO passwordChangeDTO);
     UserAccount updateProfile(Long userId, @Valid UserProfileEditDTO profileData);
     public List<UserAccountWithoutAddressDto> searchUsers(String query);
-    }
+
+    UserAccount registerAdmin(UserAccountDTO userAccountDTO) throws Exception; // <--- DODAJ OVU LINIJU
+
+}
