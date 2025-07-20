@@ -25,11 +25,11 @@ public interface InMemoryUserAccountRepository extends JpaRepository<UserAccount
 
     @Query("""
     SELECT u FROM UserAccount u
-    LEFT JOIN Follow f ON u.id = f.followerId
+    LEFT JOIN Follow f ON u.id = f.followingId
     GROUP BY u.id
     ORDER BY COUNT(f) DESC
     """)
-    List<UserAccount> findAllSortedByFollowingCountDesc();
+    List<UserAccount> findAllSortedByFollowerCountDesc();
 
 
     @Query("SELECT u FROM UserAccount u ORDER BY u.email ASC")
