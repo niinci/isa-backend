@@ -1,41 +1,35 @@
 package rs.ac.uns.ftn.informatika.rest.controller;
 
-import org.springframework.web.bind.annotation.*;
-import rs.ac.uns.ftn.informatika.rest.customqueue.CareLocationProducer;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
 import rs.ac.uns.ftn.informatika.rest.dto.CareLocationDTO;
-import rs.ac.uns.ftn.informatika.rest.domain.CareLocation;
-import rs.ac.uns.ftn.informatika.rest.repository.CareLocationRepository;
+import rs.ac.uns.ftn.informatika.rest.service.CareLocationService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/care-locations")
+@RequestMapping("/api")
 public class CareLocationController {
 
-    private final CareLocationProducer producer;
-    private final CareLocationRepository repository;
+    private final CareLocationService careLocationService;
 
-    public CareLocationController(CareLocationProducer producer, CareLocationRepository repository) {
-        this.producer = producer;
-        this.repository = repository;
+    public CareLocationController(CareLocationService careLocationService) {
+        this.careLocationService = careLocationService;
     }
 
-    @PostMapping
-    public void sendLocation(@RequestBody CareLocationDTO dto) {
-        producer.sendCareLocation(dto);
+    @GetMapping("/receive-rabbit-locations")
+    public Mono<ResponseEntity<String>> receiveRabbitLocationsManually() {
+        return careLocationService.receiveAndSaveLocation()
+                .map(locationDto -> ResponseEntity.ok("Location received and saved: " + locationDto.getName()))
+                .defaultIfEmpty(ResponseEntity.ok("No new locations to receive (or an error occurred)."));
     }
 
-    @GetMapping
-    public List<CareLocationDTO> getAll() {
-        List<CareLocation> entities = repository.findAll();
-
-        return entities.stream().map(e -> new CareLocationDTO(
-                e.getId(),
-                e.getName(),
-                e.getAddress(),
-                e.getLatitude(),
-                e.getLongitude()
-        )).collect(Collectors.toList());
+    @GetMapping("/rabbit-care-locations")
+    public List<CareLocationDTO> getRabbitCareLocations() {
+        return careLocationService.getAllRabbitCareLocations();
     }
 }
