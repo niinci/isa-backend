@@ -37,7 +37,7 @@ public class CommentController {
   }
 
     @DeleteMapping("/{commentId}")
-    @PreAuthorize("hasRole('ADMIN')") // ⭐ Dodajte ovu anotaciju za autorizaciju ⭐
+    @PreAuthorize("hasRole('ADMIN')")  
     public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
         commentService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
