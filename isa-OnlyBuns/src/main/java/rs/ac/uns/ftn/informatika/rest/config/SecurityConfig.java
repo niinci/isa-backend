@@ -54,9 +54,19 @@ public class SecurityConfig {
                 .requestMatchers("/api/userAccount/register").permitAll()
                 .requestMatchers("/api/userAccount/login").permitAll()
                 .requestMatchers("/api/userAccount/verify").permitAll()
-                .requestMatchers("/api/userAccount/getUserInfo").hasRole("USER")
+                .requestMatchers("/api/userAccount/getUserInfo").permitAll()
                 .requestMatchers("/api/userAccount/profile/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/comments/post/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/follows/isFollowing").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/userAccount/{userId}/following").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/userAccount/{userId}/followers").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/userAccount/{userId}/username").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/userAccount/{userId}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/posts/user/{userId}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/follows/followers").permitAll() // For followers list
+                .requestMatchers(HttpMethod.GET, "/api/follows/following").permitAll() // For following list
+                .requestMatchers(HttpMethod.POST, "/api/comments/usernames").permitAll()
+
                 .requestMatchers("/api/userAccount/location").hasRole("USER")
                 .requestMatchers("/mq/**").hasRole("USER")
 
@@ -82,6 +92,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/posts/*/delete").hasRole("ADMIN")
                 .requestMatchers("/api/comments/*/delete").hasRole("ADMIN")
                 .requestMatchers("/api/userAccount/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/userAccount/admin/register").hasRole("ADMIN")
+
 
                 .requestMatchers(HttpMethod.OPTIONS, "/chat-websocket/**").permitAll()
                 .requestMatchers("/chat-websocket/**").permitAll()

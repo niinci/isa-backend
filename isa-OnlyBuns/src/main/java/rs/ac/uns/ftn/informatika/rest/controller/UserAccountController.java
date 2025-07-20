@@ -102,7 +102,7 @@ public class UserAccountController {
             return new ResponseEntity<String>(token, HttpStatus.OK);
         }
     }
-    @PreAuthorize("hasRole('USER')")
+    //@PreAuthorize("hasRole('USER')")
     @GetMapping(path = "/getUserInfo")
     public ResponseEntity<UserInfo> getUserInfo(@RequestParam String email) {
         List<UserAccount> acc = userAccountService.searchByEmail(email);
@@ -241,7 +241,7 @@ public class UserAccountController {
                         .body("Geokodiranje nije uspelo"));
     }
 
-    @PreAuthorize("hasAnyRole('USER')") // ili po potrebi
+    //@PreAuthorize("hasAnyRole('USER')") // ili po potrebi
     @GetMapping("/{id}")
     public ResponseEntity<UserInfo> getUserById(@PathVariable("id") Long id) {
         UserAccount user = userAccountRepository.findById(id).orElse(null);
@@ -263,6 +263,28 @@ public class UserAccountController {
     public ResponseEntity<List<UserAccount>> searchByUsername(@RequestParam("username") String username) {
         List<UserAccount> users = userAccountService.searchByUsername(username);
         return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @Operation(description = "Register new ADMIN user", method = "POST")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Admin created",
+                    content = {@Content(mediaType = "application/json", schema = @Schema(implementation = UserAccount.class))}),
+            @ApiResponse(responseCode = "409", description = "Username or email already exists",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only ADMIN can register new admins",
+                    content = @Content)
+    })
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE, path = "/admin/register")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserAccount> registerAdmin(@Valid @RequestBody UserAccountDTO userAccountDto) {
+        UserAccount newAdmin = null;
+        try {
+            newAdmin = userAccountService.registerAdmin(userAccountDto);
+            return new ResponseEntity<>(newAdmin, HttpStatus.CREATED);
+        } catch (Exception e) {
+            // Možeš vratiti i specifičniju poruku greške ako želiš (e.g. e.getMessage())
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
     }
 
 
