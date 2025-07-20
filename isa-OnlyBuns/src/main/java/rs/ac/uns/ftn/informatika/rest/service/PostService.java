@@ -365,7 +365,7 @@ public class PostService {
                         post.getId(),
                         post.getDescription(),
                         user.getUsername(),
-                        LocalDateTime.now()
+                        post.getCreationTime()
                 );
                 adNotificationProducer.sendAdNotification(notificationDTO);
             }
