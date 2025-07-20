@@ -2,6 +2,7 @@ package rs.ac.uns.ftn.informatika.rest.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rs.ac.uns.ftn.informatika.rest.domain.Comment;
 import rs.ac.uns.ftn.informatika.rest.dto.CommentDTO;
@@ -29,15 +30,16 @@ public class CommentController {
         return ResponseEntity.ok(commentService.getCommentsByPost(postId));
     }
 
-
-  /*  @DeleteMapping("/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
-        commentService.deleteComment(commentId);
-        return ResponseEntity.noContent().build();
-    }*/
   @PostMapping("/usernames")
   public ResponseEntity<List<UserIdUsernameDTO>> getUsernamesByUserIds(@RequestBody List<Long> userIds) {
       List<UserIdUsernameDTO> usernames = commentService.getUsernamesByUserIds(userIds);
       return ResponseEntity.ok(usernames);
   }
+
+    @DeleteMapping("/{commentId}")
+    @PreAuthorize("hasRole('ADMIN')")  
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+        commentService.deleteComment(commentId);
+        return ResponseEntity.noContent().build();
+    }
 }

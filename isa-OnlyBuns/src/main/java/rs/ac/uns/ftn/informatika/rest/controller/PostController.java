@@ -88,7 +88,7 @@ public class PostController {
             return ResponseEntity.status(500).build();
         }
     }
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id, Authentication authentication) {
         logRequestPort("/api/posts/" + id + " - DELETE"); // Dodato logovanje

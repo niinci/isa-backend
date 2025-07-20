@@ -8,6 +8,8 @@ import org.apache.catalina.User;
 import io.micrometer.core.annotation.Timed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.rest.domain.PostLike;
@@ -178,13 +180,17 @@ public class PostService {
     public void deletePost(Long postId, Long userId) {
         Post post = getPostById(postId);
 
-        if (!post.getUserId().equals(userId)) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"));
+
+        // Ako nije admin i nije vlasnik posta → zabrani
+        if (!isAdmin && !post.getUserId().equals(userId)) {
             throw new RuntimeException("Nemaš dozvolu da obrišeš ovaj post.");
         }
 
         if (!post.isDeleted()) {
-            // Post nije već obrisan, znači treba da ažuriramo postCount
-            Optional<UserAccount> userOpt = userRepository.findById(userId);
+            Optional<UserAccount> userOpt = userRepository.findById(post.getUserId());
             if (userOpt.isPresent()) {
                 UserAccount user = userOpt.get();
                 if (user.getPostCount() > 0) {
@@ -199,6 +205,7 @@ public class PostService {
 
         commentRepository.deleteAll(commentRepository.findByPostId(postId));
     }
+
 
 
 
