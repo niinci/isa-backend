@@ -12,10 +12,10 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class RateLimiterService {
-
-    private final ConcurrentMap<String, UserRequestTracker> requestTrackers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentMap<String, UserRequestTracker>> requestTrackers = new ConcurrentHashMap<>();
 
     private static final int COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE = 5;
+    private static final int COMMENT_REGISTERED_USER_LIMIT_PER_HOUR = 60;
     private static final int COMMENT_UNAUTHENTICATED_LIMIT_PER_MINUTE = 0; // Neautentifikovani ne mogu komentarisati
 
     private static final int FOLLOW_REGISTERED_USER_LIMIT_PER_MINUTE = 50;
@@ -33,13 +33,10 @@ public class RateLimiterService {
 
         String effectiveIdentifier = (actionType.equals("LOGIN_ATTEMPT")) ? identifier : identifier + "_" + role.name();
 
-        String key = effectiveIdentifier + "_" + actionType;
+        String baseKey = effectiveIdentifier + "_" + actionType;
 
-        UserRequestTracker tracker = requestTrackers.computeIfAbsent(key,
-                k -> new UserRequestTracker());
-
-        int limit = getLimitForActionAndRole(actionType, role);
-        long timeWindowMillis = getTimeWindowForActionType(actionType);
+        ConcurrentMap<String, UserRequestTracker> actionTrackers = requestTrackers.computeIfAbsent(baseKey,
+                k -> new ConcurrentHashMap<>());
 
         System.out.println("RateLimiterService: Checking request:");
         System.out.println("  Identifier: " + identifier);
@@ -47,12 +44,44 @@ public class RateLimiterService {
         System.out.println("  Request URI: " + requestUri);
         System.out.println("  HTTP Method: " + httpMethod);
         System.out.println("  Determined Action Type: " + actionType);
-        System.out.println("  Effective Key: " + key);
-        System.out.println("  Calculated Limit: " + limit);
-        System.out.println("  Time Window (ms): " + timeWindowMillis);
+        System.out.println("  Base Key: " + baseKey);
 
+        if (actionType.equals("COMMENT_POST") && (role == Role.REGISTERED_USER || role == Role.ADMIN)) {
+            UserRequestTracker minuteTracker = actionTrackers.computeIfAbsent("MINUTE",
+                    k -> new UserRequestTracker());
+            int minuteLimit = COMMENT_REGISTERED_USER_LIMIT_PER_MINUTE;
+            long minuteTimeWindow = TimeUnit.MINUTES.toMillis(1);
+            System.out.println("  Checking Minute Limit: " + minuteLimit + " per " + minuteTimeWindow + "ms");
+            if (!minuteTracker.isRequestAllowed(minuteLimit, minuteTimeWindow, baseKey + "_MINUTE")) {
+                System.out.println("  Minute limit EXCEEDED for " + baseKey);
+                return false;
+            }
 
-        return tracker.isRequestAllowed(limit, timeWindowMillis, key);
+            UserRequestTracker hourTracker = actionTrackers.computeIfAbsent("HOUR",
+                    k -> new UserRequestTracker());
+            int hourLimit = COMMENT_REGISTERED_USER_LIMIT_PER_HOUR;
+            long hourTimeWindow = TimeUnit.HOURS.toMillis(1);
+            System.out.println("  Checking Hour Limit: " + hourLimit + " per " + hourTimeWindow + "ms");
+            if (!hourTracker.isRequestAllowed(hourLimit, hourTimeWindow, baseKey + "_HOUR")) {
+                System.out.println("  Hour limit EXCEEDED for " + baseKey);
+                minuteTracker.decrementRequestCount();
+                return false;
+            }
+
+            return true;
+
+        } else {
+            UserRequestTracker tracker = actionTrackers.computeIfAbsent("DEFAULT",
+                    k -> new UserRequestTracker());
+
+            int limit = getLimitForActionAndRole(actionType, role);
+            long timeWindowMillis = getTimeWindowForActionType(actionType);
+
+            System.out.println("  Calculated Limit: " + limit);
+            System.out.println("  Time Window (ms): " + timeWindowMillis);
+
+            return tracker.isRequestAllowed(limit, timeWindowMillis, baseKey + "_DEFAULT");
+        }
     }
 
     private int getLimitForActionAndRole(String actionType, Role role) {
@@ -110,7 +139,6 @@ public class RateLimiterService {
                 actionType = "COMMENT_POST";
             }
         }
-        // Samo POST zahtevi za /api/follows/follow* se tretiraju kao "FOLLOW_USER" za rate limit
         else if (uri.matches("/api/follows/follow.*") && "POST".equalsIgnoreCase(httpMethod)) {
             actionType = "FOLLOW_USER";
         }
@@ -137,22 +165,34 @@ public class RateLimiterService {
                 windowStartMillis = nowMillis;
             }
 
-            if (requestCount >= limit) {return false;
+            if (requestCount >= limit) {
+                return false;
             }
 
             requestCount++;
-
+            System.out.println("UserRequestTracker[" + key + "]: Request Allowed. Current count: " + requestCount + " (Limit: " + limit + ").");
             return true;
+        }
+
+        public synchronized void decrementRequestCount() {
+            if (requestCount > 0) {
+                requestCount--;
+                System.out.println("UserRequestTracker: Decremented count. New count: " + requestCount);
+            }
         }
     }
 
-    @Scheduled(fixedRate = 3600000)
+    @Scheduled(fixedRate = 3600000) // Pokrece se svakih sat vremena
     public void cleanupOldEntries() {
-        long cutoffMillis = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2);
+        long twoHoursAgo = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2);
 
         requestTrackers.entrySet().removeIf(entry -> {
-            UserRequestTracker tracker = entry.getValue();
-            return tracker.requestCount == 0 && (System.currentTimeMillis() - tracker.windowStartMillis) > TimeUnit.HOURS.toMillis(1);
+            ConcurrentMap<String, UserRequestTracker> trackers = entry.getValue();
+            boolean allTrackersEmptyAndExpired = trackers.values().stream()
+                    .allMatch(tracker -> tracker.requestCount == 0 && (System.currentTimeMillis() - tracker.windowStartMillis) > TimeUnit.HOURS.toMillis(1));
+            return allTrackersEmptyAndExpired;
         });
+
+        System.out.println("RateLimiterService: Cleaned up old entries. Current map size: " + requestTrackers.size());
     }
 }
