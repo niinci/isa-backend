@@ -315,7 +315,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     public List<UserAccount> sortByFollowingCount() {
-        return userAccountRepository.findAllSortedByFollowingCountDesc();
+        return userAccountRepository.findAllSortedByFollowerCountDesc();
     }
 
     @Override
